@@ -66,7 +66,7 @@ export function WidgetGallery() {
         </p>
       </div>
 
-      <Droppable droppableId="widget-gallery" isDropDisabled={true}>
+      <Droppable droppableId="widget-gallery" isDropDisabled>
         {(provided) => (
           <div 
             className="space-y-2"
@@ -90,7 +90,7 @@ export function WidgetGallery() {
                       {...provided.dragHandleProps}
                       className={`
                         p-3 rounded-md border cursor-pointer
-                        ${snapshot.isDragging ? "opacity-50" : ""}
+                        ${snapshot.isDragging ? "opacity-50 ring-2 ring-primary" : ""}
                         ${isPlaced 
                           ? "bg-muted/20 border-border/50 text-muted-foreground" 
                           : "bg-card hover:bg-card/80 border-border"}

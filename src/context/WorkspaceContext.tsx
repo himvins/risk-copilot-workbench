@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-import { Widget, Message, WidgetType } from '@/types';
+import { Widget, Message, WidgetType, WidgetCustomization } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
 
 interface WorkspaceContextProps {
@@ -15,12 +15,15 @@ interface WorkspaceContextProps {
   addWidgetByType: (type: WidgetType) => void;
   removeWidgetByType: (type: WidgetType) => void;
   findWidgetTitleByType: (type: WidgetType) => string;
+  getWidgetCustomization: (widgetId: string) => WidgetCustomization | undefined;
+  addColumnToWidget: (widgetId: string, columnType: string, columnName: string) => void;
 }
 
 const WorkspaceContext = createContext<WorkspaceContextProps | null>(null);
 
 export function WorkspaceProvider({ children }: { children: ReactNode }) {
   const [placedWidgets, setPlacedWidgets] = useState<Widget[]>([]);
+  const [widgetCustomizations, setWidgetCustomizations] = useState<Record<string, WidgetCustomization>>({});
   const [activeWidgetId, setActiveWidgetId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -39,13 +42,40 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     return widgetTitles[type] || 'Widget';
   };
 
+  // Get widget customization
+  const getWidgetCustomization = (widgetId: string) => {
+    return widgetCustomizations[widgetId];
+  };
+
+  // Add a column to a widget
+  const addColumnToWidget = (widgetId: string, columnType: string, columnName: string) => {
+    setWidgetCustomizations(prev => {
+      const currentCustomization = prev[widgetId] || { additionalColumns: [] };
+      return {
+        ...prev,
+        [widgetId]: {
+          ...currentCustomization,
+          additionalColumns: [
+            ...currentCustomization.additionalColumns,
+            { id: uuidv4(), type: columnType, name: columnName }
+          ]
+        }
+      };
+    });
+    
+    // Find the widget to use its title in the response
+    const widget = placedWidgets.find(w => w.id === widgetId);
+    respondToMessage(`I've added the ${columnName} column to your ${widget?.title} widget.`);
+  };
+
   // Expose the workspace context to the window for the drag and drop operations
   useEffect(() => {
     const contextEl = document.querySelector('[data-workspace-context]');
     if (contextEl) {
       (contextEl as any).__workspaceContext = {
         addWidgetByType,
-        removeWidgetByType
+        removeWidgetByType,
+        addColumnToWidget
       };
     }
   }, []);
@@ -70,6 +100,36 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       
       // Respond with a confirmation
       respondToMessage(`I've added the ${title} widget to your workspace.`);
+      
+      // Suggest columns if it's the counterparty widget
+      if (type === 'counterparty-analysis') {
+        setTimeout(() => {
+          const actions: Message['actions'] = [
+            {
+              id: uuidv4(),
+              label: 'Add Profitability Column',
+              action: () => {
+                const widget = placedWidgets.find(w => w.type === 'counterparty-analysis');
+                if (widget) {
+                  addColumnToWidget(widget.id, 'profitability', 'Profitability');
+                }
+              }
+            },
+            {
+              id: uuidv4(),
+              label: 'Add Sentiment Column',
+              action: () => {
+                const widget = placedWidgets.find(w => w.type === 'counterparty-analysis');
+                if (widget) {
+                  addColumnToWidget(widget.id, 'sentiment', 'Sentiment');
+                }
+              }
+            }
+          ];
+          
+          respondToMessage("Would you like to enhance the counterparty analysis with AI-powered insights? I can add additional data columns.", actions);
+        }, 1500);
+      }
     } else {
       respondToMessage(`You already have a ${title} widget in your workspace.`);
     }
@@ -119,6 +179,13 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       { regex: /show me (alerts|risk alerts)/i, type: 'risk-alerts' as WidgetType },
     ];
     
+    // Check for adding columns to counterparty widget
+    const addColumnPatterns = [
+      { regex: /add (profitability|profit|revenue) column/i, type: 'profitability', name: 'Profitability' },
+      { regex: /add (sentiment|market sentiment) column/i, type: 'sentiment', name: 'Sentiment' },
+      { regex: /add (volatility|price volatility) column/i, type: 'volatility', name: 'Volatility' },
+    ];
+    
     // Check for removing widgets
     const removeWidgetPatterns = [
       { regex: /remove (risk exposure|risk-exposure)/i, type: 'risk-exposure' as WidgetType },
@@ -130,34 +197,51 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     ];
     
     // Check if we need to add a widget
-    let widgetActionTaken = false;
+    let actionTaken = false;
     
     for (const pattern of addWidgetPatterns) {
       if (pattern.regex.test(lowerContent)) {
         addWidgetByType(pattern.type);
-        widgetActionTaken = true;
+        actionTaken = true;
         break;
       }
     }
     
+    // Check if we need to add a column
+    if (!actionTaken) {
+      for (const pattern of addColumnPatterns) {
+        if (pattern.regex.test(lowerContent)) {
+          const counterpartyWidget = placedWidgets.find(w => w.type === 'counterparty-analysis');
+          if (counterpartyWidget) {
+            addColumnToWidget(counterpartyWidget.id, pattern.type, pattern.name);
+            actionTaken = true;
+            break;
+          } else {
+            respondToMessage("You need to add the Counterparty Analysis widget first before adding columns to it.");
+            actionTaken = true;
+            break;
+          }
+        }
+      }
+    }
+    
     // Check if we need to remove a widget
-    if (!widgetActionTaken) {
+    if (!actionTaken) {
       for (const pattern of removeWidgetPatterns) {
         if (pattern.regex.test(lowerContent)) {
           removeWidgetByType(pattern.type);
-          widgetActionTaken = true;
+          actionTaken = true;
           break;
         }
       }
     }
     
     // If no widget action was taken, provide a generic response
-    if (!widgetActionTaken) {
+    if (!actionTaken) {
       setTimeout(() => {
-        const response = `I'll help you analyze that. ${content.includes('risk') ? 'I recommend looking at the Risk Exposure widget for more insights.' : 'Let me check the data for you.'}`;
+        const counterpartyWidget = placedWidgets.find(w => w.type === 'counterparty-analysis');
         
-        // Add actions to suggest widgets
-        const actions: Message['actions'] = [
+        let actions: Message['actions'] = [
           {
             id: uuidv4(),
             label: 'Add Risk Exposure',
@@ -170,6 +254,29 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
           }
         ];
         
+        // If counterparty widget exists, add column suggestions
+        if (counterpartyWidget) {
+          actions = [
+            {
+              id: uuidv4(),
+              label: 'Add Profitability Column',
+              action: () => addColumnToWidget(counterpartyWidget.id, 'profitability', 'Profitability')
+            },
+            {
+              id: uuidv4(),
+              label: 'Add Sentiment Column',
+              action: () => addColumnToWidget(counterpartyWidget.id, 'sentiment', 'Sentiment')
+            },
+            {
+              id: uuidv4(),
+              label: 'Add Volatility Column',
+              action: () => addColumnToWidget(counterpartyWidget.id, 'volatility', 'Volatility')
+            },
+            ...actions
+          ];
+        }
+        
+        const response = `I'll help you analyze that. ${content.includes('risk') ? 'I recommend looking at the Risk Exposure widget for more insights.' : 'Let me check the data for you.'}`;
         respondToMessage(response, actions);
       }, 1500);
     }
@@ -201,7 +308,9 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
         respondToMessage,
         addWidgetByType,
         removeWidgetByType,
-        findWidgetTitleByType
+        findWidgetTitleByType,
+        getWidgetCustomization,
+        addColumnToWidget
       }}
     >
       {children}

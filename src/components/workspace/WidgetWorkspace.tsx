@@ -28,10 +28,10 @@ export function WidgetWorkspace() {
             {...provided.droppableProps}
             className={`
               h-full p-6 overflow-auto grid grid-cols-2 gap-6 auto-rows-min
-              ${snapshot.isDraggingOver ? "widget-drop-target" : ""}
+              ${snapshot.isDraggingOver ? "bg-primary/5 border-2 border-dashed border-primary/30" : ""}
             `}
           >
-            {placedWidgets.map((widget, index) => {
+            {placedWidgets.map((widget) => {
               const WidgetComponent = widgetComponents[widget.type];
               return (
                 <div
@@ -45,7 +45,7 @@ export function WidgetWorkspace() {
                 </div>
               );
             })}
-            {placedWidgets.length === 0 && !snapshot.isDraggingOver && (
+            {placedWidgets.length === 0 && (
               <div className="col-span-2 h-full flex flex-col items-center justify-center text-muted-foreground">
                 <p className="text-sm mb-2">Drag widgets here to build your workspace</p>
                 <p className="text-xs">

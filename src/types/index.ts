@@ -42,3 +42,11 @@ export interface WidgetComponentProps {
   onClose: (id: string) => void;
   onResize?: (id: string, size: string) => void;
 }
+
+export interface WidgetCustomization {
+  additionalColumns?: {
+    id: string;
+    type: string;
+    name: string;
+  }[];
+}
