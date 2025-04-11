@@ -9,10 +9,10 @@ import { DragDropContext, DropResult } from "@hello-pangea/dnd";
 export function AppLayout() {
   // Handle drag end event for the entire application
   const handleDragEnd = (result: DropResult) => {
-    const { source, destination, draggableId } = result;
-    
     // If there's no destination, the item was dropped outside droppable areas
-    if (!destination) return;
+    if (!result.destination) return;
+    
+    const { source, destination, draggableId } = result;
     
     // Handle drag from gallery to workspace
     if (source.droppableId === "widget-gallery" && destination.droppableId === "workspace") {
@@ -30,7 +30,7 @@ export function AppLayout() {
 
   return (
     <WorkspaceProvider>
-      <div className="h-screen flex flex-col">
+      <div className="h-screen flex flex-col" data-workspace-context>
         <header className="bg-card p-3 border-b border-border flex items-center">
           <div className="flex items-center gap-2">
             <div className="bg-primary p-1 rounded">

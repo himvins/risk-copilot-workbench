@@ -21,8 +21,7 @@ export function WidgetWorkspace() {
 
   return (
     <div className="relative h-full">
-      {/* Workspace area - now takes up the full height */}
-      <Droppable droppableId="workspace" direction="vertical">
+      <Droppable droppableId="workspace" direction="vertical" type="WIDGET">
         {(provided, snapshot) => (
           <div
             ref={provided.innerRef}

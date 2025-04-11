@@ -1,7 +1,7 @@
 
 import React from "react";
 import { useWorkspace } from "@/context/WorkspaceContext";
-import { Draggable } from "@hello-pangea/dnd";
+import { Droppable, Draggable } from "@hello-pangea/dnd";
 import { BarChart3, Activity, LineChart, AlertCircle, Scale, DollarSign } from "lucide-react";
 import { WidgetType } from "@/types";
 
@@ -66,56 +66,65 @@ export function WidgetGallery() {
         </p>
       </div>
 
-      <div className="space-y-2">
-        {availableWidgets.map((widget, index) => {
-          const isPlaced = placedWidgetTypes.has(widget.type);
-          
-          return (
-            <Draggable
-              key={widget.type}
-              draggableId={`gallery-${widget.type}`}
-              index={index}
-              isDragDisabled={isPlaced}
-            >
-              {(provided, snapshot) => (
-                <div
-                  ref={provided.innerRef}
-                  {...provided.draggableProps}
-                  {...provided.dragHandleProps}
-                  className={`
-                    p-3 rounded-md border cursor-pointer
-                    ${snapshot.isDragging ? "opacity-50" : ""}
-                    ${isPlaced 
-                      ? "bg-muted/20 border-border/50 text-muted-foreground" 
-                      : "bg-card hover:bg-card/80 border-border"}
-                  `}
-                  onClick={() => 
-                    !isPlaced && 
-                    addWidgetByType(widget.type)
-                  }
+      <Droppable droppableId="widget-gallery" isDropDisabled={true}>
+        {(provided) => (
+          <div 
+            className="space-y-2"
+            ref={provided.innerRef}
+            {...provided.droppableProps}
+          >
+            {availableWidgets.map((widget, index) => {
+              const isPlaced = placedWidgetTypes.has(widget.type);
+              
+              return (
+                <Draggable
+                  key={`gallery-${widget.type}`}
+                  draggableId={`gallery-${widget.type}`}
+                  index={index}
+                  isDragDisabled={isPlaced}
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="bg-secondary/50 p-2 rounded-md">
-                      {widget.icon}
+                  {(provided, snapshot) => (
+                    <div
+                      ref={provided.innerRef}
+                      {...provided.draggableProps}
+                      {...provided.dragHandleProps}
+                      className={`
+                        p-3 rounded-md border cursor-pointer
+                        ${snapshot.isDragging ? "opacity-50" : ""}
+                        ${isPlaced 
+                          ? "bg-muted/20 border-border/50 text-muted-foreground" 
+                          : "bg-card hover:bg-card/80 border-border"}
+                      `}
+                      onClick={() => 
+                        !isPlaced && 
+                        addWidgetByType(widget.type)
+                      }
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="bg-secondary/50 p-2 rounded-md">
+                          {widget.icon}
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-medium">{widget.title}</h3>
+                          <p className="text-xs text-muted-foreground">
+                            {widget.description}
+                          </p>
+                          {isPlaced && (
+                            <span className="text-xs inline-block mt-1 px-1.5 py-0.5 bg-muted/30 rounded">
+                              Added to workspace
+                            </span>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="text-sm font-medium">{widget.title}</h3>
-                      <p className="text-xs text-muted-foreground">
-                        {widget.description}
-                      </p>
-                      {isPlaced && (
-                        <span className="text-xs inline-block mt-1 px-1.5 py-0.5 bg-muted/30 rounded">
-                          Added to workspace
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
-            </Draggable>
-          );
-        })}
-      </div>
+                  )}
+                </Draggable>
+              );
+            })}
+            {provided.placeholder}
+          </div>
+        )}
+      </Droppable>
     </div>
   );
 }

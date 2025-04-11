@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { Widget, Message, WidgetType } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -38,6 +38,17 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   const findWidgetTitleByType = (type: WidgetType): string => {
     return widgetTitles[type] || 'Widget';
   };
+
+  // Expose the workspace context to the window for the drag and drop operations
+  useEffect(() => {
+    const contextEl = document.querySelector('[data-workspace-context]');
+    if (contextEl) {
+      (contextEl as any).__workspaceContext = {
+        addWidgetByType,
+        removeWidgetByType
+      };
+    }
+  }, []);
 
   const addWidgetByType = (type: WidgetType) => {
     const title = findWidgetTitleByType(type);
