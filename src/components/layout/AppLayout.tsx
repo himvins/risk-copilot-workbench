@@ -4,8 +4,16 @@ import { WidgetGallery } from "../workspace/WidgetGallery";
 import { WidgetWorkspace } from "../workspace/WidgetWorkspace";
 import { RiskCopilot } from "../workspace/RiskCopilot";
 import { WorkspaceProvider } from "@/context/WorkspaceContext";
+import { DragDropContext } from "@hello-pangea/dnd";
 
 export function AppLayout() {
+  // Handle drag end event for the entire application
+  const handleDragEnd = (result: any) => {
+    if (!result.destination) return;
+    
+    // The rest of the drag and drop logic will be handled in the workspace component
+  };
+
   return (
     <WorkspaceProvider>
       <div className="h-screen flex flex-col">
@@ -22,19 +30,21 @@ export function AppLayout() {
           </div>
         </header>
         
-        <main className="flex-1 flex overflow-hidden">
-          <aside className="w-[300px] border-r border-border">
-            <WidgetGallery />
-          </aside>
-          
-          <div className="flex-1 overflow-hidden">
-            <WidgetWorkspace />
-          </div>
-          
-          <aside className="w-[350px] border-l border-border">
-            <RiskCopilot />
-          </aside>
-        </main>
+        <DragDropContext onDragEnd={handleDragEnd}>
+          <main className="flex-1 flex overflow-hidden">
+            <aside className="w-[300px] border-r border-border">
+              <WidgetGallery />
+            </aside>
+            
+            <div className="flex-1 overflow-hidden">
+              <WidgetWorkspace />
+            </div>
+            
+            <aside className="w-[350px] border-l border-border">
+              <RiskCopilot />
+            </aside>
+          </main>
+        </DragDropContext>
       </div>
     </WorkspaceProvider>
   );

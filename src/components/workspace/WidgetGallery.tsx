@@ -1,11 +1,12 @@
 
 import React from "react";
 import { useWorkspace } from "@/context/WorkspaceContext";
-import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
-import { BarChart3, Activity, LineChart, AlertCircle, Scale, BarChart, DollarSign } from "lucide-react";
+import { Droppable, Draggable } from "@hello-pangea/dnd";
+import { BarChart3, Activity, LineChart, AlertCircle, Scale, DollarSign } from "lucide-react";
+import { WidgetType } from "@/types";
 
 interface WidgetTemplate {
-  type: string;
+  type: WidgetType;
   title: string;
   icon: React.ReactNode;
   description: string;
@@ -51,10 +52,9 @@ const availableWidgets: WidgetTemplate[] = [
 ];
 
 export function WidgetGallery() {
-  const { widgets, addWidgetByType } = useWorkspace();
-
+  const { widgets, addWidgetByType, placedWidgets } = useWorkspace();
+  
   // Filter out widgets that are already placed on the workspace
-  const { placedWidgets } = useWorkspace();
   const placedWidgetTypes = new Set(placedWidgets.map(w => w.type));
   
   return (
@@ -131,3 +131,4 @@ export function WidgetGallery() {
     </div>
   );
 }
+

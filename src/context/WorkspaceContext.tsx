@@ -15,9 +15,9 @@ interface WorkspaceContextProps {
   setActiveWidgetId: (id: string | null) => void;
   sendMessage: (content: string) => void;
   respondToMessage: (content: string, actions?: Message['actions']) => void;
-  addWidgetByType: (type: Widget['type']) => void;
-  removeWidgetByType: (type: Widget['type']) => void;
-  findWidgetTitleByType: (type: Widget['type']) => string;
+  addWidgetByType: (type: WidgetType) => void;
+  removeWidgetByType: (type: WidgetType) => void;
+  findWidgetTitleByType: (type: WidgetType) => string;
 }
 
 const WorkspaceContext = createContext<WorkspaceContextProps | null>(null);
@@ -39,11 +39,11 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     'risk-alerts': 'Risk Alerts'
   };
 
-  const findWidgetTitleByType = (type: Widget['type']): string => {
-    return widgetTitles[type as WidgetType] || 'Widget';
+  const findWidgetTitleByType = (type: WidgetType): string => {
+    return widgetTitles[type] || 'Widget';
   };
 
-  const addWidget = (type: Widget['type'], title: string, size: Widget['size'] = 'md') => {
+  const addWidget = (type: WidgetType, title: string, size: Widget['size'] = 'md') => {
     const newWidget: Widget = {
       id: uuidv4(),
       type,
@@ -54,7 +54,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     setWidgets(prev => [...prev, newWidget]);
   };
 
-  const addWidgetByType = (type: Widget['type']) => {
+  const addWidgetByType = (type: WidgetType) => {
     const title = findWidgetTitleByType(type);
     
     // Check if widget already exists in placed widgets
@@ -83,7 +83,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const removeWidgetByType = (type: Widget['type']) => {
+  const removeWidgetByType = (type: WidgetType) => {
     const widgetToRemove = placedWidgets.find(w => w.type === type);
     if (widgetToRemove) {
       setPlacedWidgets(prev => prev.filter(w => w.type !== type));

@@ -1,7 +1,7 @@
 
 import React from "react";
 import { useWorkspace } from "@/context/WorkspaceContext";
-import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
+import { Droppable, Draggable } from "@hello-pangea/dnd";
 import { RiskExposureWidget } from "./widgets/RiskExposureWidget";
 import { CounterpartyAnalysisWidget } from "./widgets/CounterpartyAnalysisWidget";
 import { MarketVolatilityWidget } from "./widgets/MarketVolatilityWidget";
@@ -17,139 +17,93 @@ const widgetComponents: Record<string, React.FC<any>> = {
 };
 
 export function WidgetWorkspace() {
-  const { widgets, placedWidgets, placeWidget, removeWidget, addWidget, findWidgetTitleByType } = useWorkspace();
-
-  // Handle drag end of a widget
-  const handleDragEnd = (result: any) => {
-    if (!result.destination) return;
-    
-    const { source, destination, draggableId } = result;
-    
-    // If dragging from widget gallery to workspace
-    if (source.droppableId === "widget-gallery" && destination.droppableId === "workspace") {
-      // Calculate position based on drop location
-      const position = {
-        x: destination.index % 2 === 0 ? 0 : 400,
-        y: Math.floor(destination.index / 2) * 350
-      };
-      
-      // For gallery items, we need to create the widget first
-      const widgetType = draggableId;
-      const newWidgetId = Date.now().toString(); // Simple unique ID for demo
-      
-      // Add the widget and then place it
-      addWidget(widgetType, findWidgetTitleByType(widgetType));
-      
-      // Delay the placement slightly to ensure the widget has been added to state
-      setTimeout(() => {
-        const addedWidget = widgets.find(w => w.type === widgetType && !w.isPlaced);
-        if (addedWidget) {
-          placeWidget(addedWidget.id, position);
-        }
-      }, 0);
-      
-      return;
-    }
-    
-    // If dragging from widget list to workspace
-    if (source.droppableId === "widget-list" && destination.droppableId === "workspace") {
-      // Calculate position based on drop location
-      const position = {
-        x: destination.index % 2 === 0 ? 0 : 400,
-        y: Math.floor(destination.index / 2) * 350
-      };
-      
-      placeWidget(draggableId, position);
-    }
-  };
+  const { widgets, placedWidgets, placeWidget, removeWidget } = useWorkspace();
 
   return (
-    <DragDropContext onDragEnd={handleDragEnd}>
-      <div className="relative h-full">
-        {/* Available widgets */}
-        <Droppable droppableId="widget-list" direction="horizontal">
-          {(provided) => (
-            <div
-              ref={provided.innerRef}
-              {...provided.droppableProps}
-              className="flex gap-2 p-3 overflow-x-auto border-b border-border bg-background/50"
-            >
-              {widgets.length === 0 ? (
-                <div className="text-xs text-muted-foreground px-4 py-2">
-                  No widgets available - add some from the gallery
-                </div>
-              ) : (
-                widgets.map((widget, index) => {
-                  const WidgetComponent = widgetComponents[widget.type];
-                  return (
-                    <Draggable
-                      key={widget.id}
-                      draggableId={widget.id}
-                      index={index}
-                    >
-                      {(provided, snapshot) => (
-                        <div
-                          ref={provided.innerRef}
-                          {...provided.draggableProps}
-                          {...provided.dragHandleProps}
-                          className={`
-                            flex-shrink-0 w-[250px] h-[150px]
-                            ${snapshot.isDragging ? "widget-dragging" : ""}
-                          `}
-                        >
-                          <WidgetComponent
-                            widget={widget}
-                            onClose={removeWidget}
-                          />
-                        </div>
-                      )}
-                    </Draggable>
-                  );
-                })
-              )}
-              {provided.placeholder}
-            </div>
-          )}
-        </Droppable>
-
-        {/* Workspace area */}
-        <Droppable droppableId="workspace" direction="vertical">
-          {(provided, snapshot) => (
-            <div
-              ref={provided.innerRef}
-              {...provided.droppableProps}
-              className={`
-                h-[calc(100%-76px)] p-6 overflow-auto grid grid-cols-2 gap-6 auto-rows-min
-                ${snapshot.isDraggingOver ? "widget-drop-target" : ""}
-              `}
-            >
-              {placedWidgets.map((widget, index) => {
+    <div className="relative h-full">
+      {/* Available widgets */}
+      <Droppable droppableId="widget-list" direction="horizontal">
+        {(provided) => (
+          <div
+            ref={provided.innerRef}
+            {...provided.droppableProps}
+            className="flex gap-2 p-3 overflow-x-auto border-b border-border bg-background/50"
+          >
+            {widgets.length === 0 ? (
+              <div className="text-xs text-muted-foreground px-4 py-2">
+                No widgets available - add some from the gallery
+              </div>
+            ) : (
+              widgets.map((widget, index) => {
                 const WidgetComponent = widgetComponents[widget.type];
                 return (
-                  <div
+                  <Draggable
                     key={widget.id}
-                    className="min-h-[300px]"
+                    draggableId={widget.id}
+                    index={index}
                   >
-                    <WidgetComponent
-                      widget={widget}
-                      onClose={removeWidget}
-                    />
-                  </div>
+                    {(provided, snapshot) => (
+                      <div
+                        ref={provided.innerRef}
+                        {...provided.draggableProps}
+                        {...provided.dragHandleProps}
+                        className={`
+                          flex-shrink-0 w-[250px] h-[150px]
+                          ${snapshot.isDragging ? "widget-dragging" : ""}
+                        `}
+                      >
+                        <WidgetComponent
+                          widget={widget}
+                          onClose={removeWidget}
+                        />
+                      </div>
+                    )}
+                  </Draggable>
                 );
-              })}
-              {placedWidgets.length === 0 && !snapshot.isDraggingOver && (
-                <div className="col-span-2 h-full flex flex-col items-center justify-center text-muted-foreground">
-                  <p className="text-sm mb-2">Drag widgets here to build your workspace</p>
-                  <p className="text-xs">
-                    Add widgets from the gallery on the left or from the toolbar above
-                  </p>
+              })
+            )}
+            {provided.placeholder}
+          </div>
+        )}
+      </Droppable>
+
+      {/* Workspace area */}
+      <Droppable droppableId="workspace" direction="vertical">
+        {(provided, snapshot) => (
+          <div
+            ref={provided.innerRef}
+            {...provided.droppableProps}
+            className={`
+              h-[calc(100%-76px)] p-6 overflow-auto grid grid-cols-2 gap-6 auto-rows-min
+              ${snapshot.isDraggingOver ? "widget-drop-target" : ""}
+            `}
+          >
+            {placedWidgets.map((widget, index) => {
+              const WidgetComponent = widgetComponents[widget.type];
+              return (
+                <div
+                  key={widget.id}
+                  className="min-h-[300px]"
+                >
+                  <WidgetComponent
+                    widget={widget}
+                    onClose={removeWidget}
+                  />
                 </div>
-              )}
-              {provided.placeholder}
-            </div>
-          )}
-        </Droppable>
-      </div>
-    </DragDropContext>
+              );
+            })}
+            {placedWidgets.length === 0 && !snapshot.isDraggingOver && (
+              <div className="col-span-2 h-full flex flex-col items-center justify-center text-muted-foreground">
+                <p className="text-sm mb-2">Drag widgets here to build your workspace</p>
+                <p className="text-xs">
+                  Add widgets from the gallery on the left or from the toolbar above
+                </p>
+              </div>
+            )}
+            {provided.placeholder}
+          </div>
+        )}
+      </Droppable>
+    </div>
   );
 }
