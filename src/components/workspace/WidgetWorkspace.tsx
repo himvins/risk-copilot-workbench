@@ -17,13 +17,39 @@ const widgetComponents: Record<string, React.FC<any>> = {
 };
 
 export function WidgetWorkspace() {
-  const { widgets, placedWidgets, placeWidget, removeWidget } = useWorkspace();
+  const { widgets, placedWidgets, placeWidget, removeWidget, addWidget, findWidgetTitleByType } = useWorkspace();
 
   // Handle drag end of a widget
   const handleDragEnd = (result: any) => {
     if (!result.destination) return;
     
     const { source, destination, draggableId } = result;
+    
+    // If dragging from widget gallery to workspace
+    if (source.droppableId === "widget-gallery" && destination.droppableId === "workspace") {
+      // Calculate position based on drop location
+      const position = {
+        x: destination.index % 2 === 0 ? 0 : 400,
+        y: Math.floor(destination.index / 2) * 350
+      };
+      
+      // For gallery items, we need to create the widget first
+      const widgetType = draggableId;
+      const newWidgetId = Date.now().toString(); // Simple unique ID for demo
+      
+      // Add the widget and then place it
+      addWidget(widgetType, findWidgetTitleByType(widgetType));
+      
+      // Delay the placement slightly to ensure the widget has been added to state
+      setTimeout(() => {
+        const addedWidget = widgets.find(w => w.type === widgetType && !w.isPlaced);
+        if (addedWidget) {
+          placeWidget(addedWidget.id, position);
+        }
+      }, 0);
+      
+      return;
+    }
     
     // If dragging from widget list to workspace
     if (source.droppableId === "widget-list" && destination.droppableId === "workspace") {

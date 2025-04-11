@@ -51,39 +51,40 @@ const availableWidgets: WidgetTemplate[] = [
 ];
 
 export function WidgetGallery() {
-  const { widgets, addWidget } = useWorkspace();
+  const { widgets, addWidgetByType } = useWorkspace();
 
-  const handleDragEnd = (result: any) => {
-    if (!result.destination) return;
-    // Handle dropping of widget onto main workspace
-    // This would be handled by the workspace component
-  };
-
-  // Filter out widgets already added to the workspace or placed on the stage
-  const availableWidgetTypes = new Set(widgets.map(w => w.type));
-
+  // Filter out widgets that are already placed on the workspace
+  const { placedWidgets } = useWorkspace();
+  const placedWidgetTypes = new Set(placedWidgets.map(w => w.type));
+  
   return (
     <div className="h-full bg-secondary/30 p-3 overflow-y-auto">
       <div className="mb-4">
         <h2 className="text-sm font-medium mb-2">Widget Gallery</h2>
         <p className="text-xs text-muted-foreground">
-          Drag widgets to the workspace or click to add
+          Drag widgets directly to the workspace or click to add
         </p>
       </div>
 
-      <DragDropContext onDragEnd={handleDragEnd}>
-        <Droppable droppableId="widget-gallery">
-          {(provided) => (
-            <div
-              {...provided.droppableProps}
-              ref={provided.innerRef}
-              className="space-y-2"
-            >
-              {availableWidgets.map((widget, index) => (
+      <Droppable 
+        droppableId="widget-gallery" 
+        isDropDisabled={true} // We don't allow dropping on the gallery
+      >
+        {(provided) => (
+          <div
+            {...provided.droppableProps}
+            ref={provided.innerRef}
+            className="space-y-2"
+          >
+            {availableWidgets.map((widget, index) => {
+              const isPlaced = placedWidgetTypes.has(widget.type);
+              
+              return (
                 <Draggable
                   key={widget.type}
                   draggableId={widget.type}
                   index={index}
+                  isDragDisabled={isPlaced}
                 >
                   {(provided, snapshot) => (
                     <div
@@ -93,13 +94,13 @@ export function WidgetGallery() {
                       className={`
                         p-3 rounded-md border cursor-pointer
                         ${snapshot.isDragging ? "opacity-50" : ""}
-                        ${availableWidgetTypes.has(widget.type as any) 
+                        ${isPlaced 
                           ? "bg-muted/20 border-border/50 text-muted-foreground" 
                           : "bg-card hover:bg-card/80 border-border"}
                       `}
                       onClick={() => 
-                        !availableWidgetTypes.has(widget.type as any) && 
-                        addWidget(widget.type as any, widget.title)
+                        !isPlaced && 
+                        addWidgetByType(widget.type)
                       }
                     >
                       <div className="flex items-center gap-3">
@@ -111,17 +112,22 @@ export function WidgetGallery() {
                           <p className="text-xs text-muted-foreground">
                             {widget.description}
                           </p>
+                          {isPlaced && (
+                            <span className="text-xs inline-block mt-1 px-1.5 py-0.5 bg-muted/30 rounded">
+                              Added to workspace
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>
                   )}
                 </Draggable>
-              ))}
-              {provided.placeholder}
-            </div>
-          )}
-        </Droppable>
-      </DragDropContext>
+              );
+            })}
+            {provided.placeholder}
+          </div>
+        )}
+      </Droppable>
     </div>
   );
 }

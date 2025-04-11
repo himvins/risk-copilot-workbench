@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 
 export function RiskCopilot() {
-  const { messages, isProcessing, sendMessage } = useWorkspace();
+  const { messages, isProcessing, sendMessage, addWidgetByType } = useWorkspace();
   const [input, setInput] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -33,7 +33,7 @@ export function RiskCopilot() {
           Risk Copilot
         </h2>
         <p className="text-xs text-muted-foreground">
-          Ask me about risk metrics or portfolio analysis
+          Ask me to add widgets or analyze your data
         </p>
       </div>
 
@@ -44,14 +44,29 @@ export function RiskCopilot() {
             <p className="text-sm">How can I help you today?</p>
             <div className="mt-6 space-y-2">
               <SuggestedPrompt onClick={(text) => sendMessage(text)}>
-                Show me counterparties with high risk exposure
+                Add risk exposure widget
+              </SuggestedPrompt>
+              <SuggestedPrompt onClick={(text) => sendMessage(text)}>
+                Show me counterparty analysis
               </SuggestedPrompt>
               <SuggestedPrompt onClick={(text) => sendMessage(text)}>
                 What's my current risk exposure across asset classes?
               </SuggestedPrompt>
-              <SuggestedPrompt onClick={(text) => sendMessage(text)}>
-                Summarize today's market volatility
-              </SuggestedPrompt>
+            </div>
+
+            <div className="mt-6">
+              <p className="text-xs text-center mb-2">Quick add widgets:</p>
+              <div className="flex flex-wrap gap-2 justify-center">
+                <QuickAddButton onClick={() => addWidgetByType('risk-exposure')}>
+                  Risk Exposure
+                </QuickAddButton>
+                <QuickAddButton onClick={() => addWidgetByType('market-volatility')}>
+                  Market Volatility
+                </QuickAddButton>
+                <QuickAddButton onClick={() => addWidgetByType('risk-alerts')}>
+                  Risk Alerts
+                </QuickAddButton>
+              </div>
             </div>
           </div>
         ) : (
@@ -121,7 +136,7 @@ export function RiskCopilot() {
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask about risk analysis..."
+            placeholder="Try 'Add counterparty analysis'"
             disabled={isProcessing}
             className="bg-card"
           />
@@ -152,5 +167,24 @@ function SuggestedPrompt({
     >
       {children}
     </button>
+  );
+}
+
+function QuickAddButton({
+  children,
+  onClick,
+}: {
+  children: React.ReactNode;
+  onClick: () => void;
+}) {
+  return (
+    <Button
+      onClick={onClick}
+      size="sm"
+      variant="outline"
+      className="bg-card/70 text-xs"
+    >
+      {children}
+    </Button>
   );
 }
