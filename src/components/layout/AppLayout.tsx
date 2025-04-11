@@ -4,14 +4,28 @@ import { WidgetGallery } from "../workspace/WidgetGallery";
 import { WidgetWorkspace } from "../workspace/WidgetWorkspace";
 import { RiskCopilot } from "../workspace/RiskCopilot";
 import { WorkspaceProvider } from "@/context/WorkspaceContext";
-import { DragDropContext } from "@hello-pangea/dnd";
+import { DragDropContext, DropResult } from "@hello-pangea/dnd";
 
 export function AppLayout() {
   // Handle drag end event for the entire application
-  const handleDragEnd = (result: any) => {
-    if (!result.destination) return;
+  const handleDragEnd = (result: DropResult) => {
+    const { source, destination, draggableId } = result;
     
-    // The rest of the drag and drop logic will be handled in the workspace component
+    // If there's no destination, the item was dropped outside droppable areas
+    if (!destination) return;
+    
+    // Handle drag from gallery to workspace
+    if (source.droppableId === "widget-gallery" && destination.droppableId === "workspace") {
+      // Extract the widget type from the draggableId (format: "gallery-[widget-type]")
+      const widgetType = draggableId.replace("gallery-", "") as any;
+      
+      // Get the context and add the widget
+      const workspaceContext = document.querySelector("[data-workspace-context]") as any;
+      if (workspaceContext && workspaceContext.__workspaceContext) {
+        const { addWidgetByType } = workspaceContext.__workspaceContext;
+        addWidgetByType(widgetType);
+      }
+    }
   };
 
   return (

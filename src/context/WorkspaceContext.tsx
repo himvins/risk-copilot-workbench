@@ -4,13 +4,10 @@ import { Widget, Message, WidgetType } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
 
 interface WorkspaceContextProps {
-  widgets: Widget[];
   placedWidgets: Widget[];
   activeWidgetId: string | null;
   messages: Message[];
   isProcessing: boolean;
-  addWidget: (type: Widget['type'], title: string, size?: Widget['size']) => void;
-  placeWidget: (id: string, position: { x: number, y: number }) => void;
   removeWidget: (id: string) => void;
   setActiveWidgetId: (id: string | null) => void;
   sendMessage: (content: string) => void;
@@ -23,7 +20,6 @@ interface WorkspaceContextProps {
 const WorkspaceContext = createContext<WorkspaceContextProps | null>(null);
 
 export function WorkspaceProvider({ children }: { children: ReactNode }) {
-  const [widgets, setWidgets] = useState<Widget[]>([]);
   const [placedWidgets, setPlacedWidgets] = useState<Widget[]>([]);
   const [activeWidgetId, setActiveWidgetId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -43,17 +39,6 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     return widgetTitles[type] || 'Widget';
   };
 
-  const addWidget = (type: WidgetType, title: string, size: Widget['size'] = 'md') => {
-    const newWidget: Widget = {
-      id: uuidv4(),
-      type,
-      title,
-      size,
-      isPlaced: false,
-    };
-    setWidgets(prev => [...prev, newWidget]);
-  };
-
   const addWidgetByType = (type: WidgetType) => {
     const title = findWidgetTitleByType(type);
     
@@ -61,17 +46,13 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     const existsInPlaced = placedWidgets.some(w => w.type === type);
     
     if (!existsInPlaced) {
-      // Create the widget directly in the placed widgets with a default position
+      // Create the widget directly in the placed widgets
       const newWidget: Widget = {
         id: uuidv4(),
         type,
         title,
         size: 'md',
         isPlaced: true,
-        position: {
-          x: Math.floor(Math.random() * 100),
-          y: Math.floor(Math.random() * 100)
-        }
       };
       
       setPlacedWidgets(prev => [...prev, newWidget]);
@@ -93,22 +74,8 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const placeWidget = (id: string, position: { x: number, y: number }) => {
-    const widget = widgets.find(w => w.id === id);
-    if (!widget) return;
-
-    const updatedWidget = { ...widget, position, isPlaced: true };
-    setWidgets(prev => prev.filter(w => w.id !== id));
-    setPlacedWidgets(prev => [...prev, updatedWidget]);
-  };
-
   const removeWidget = (id: string) => {
-    const widgetIndex = placedWidgets.findIndex(w => w.id === id);
-    if (widgetIndex !== -1) {
-      setPlacedWidgets(prev => prev.filter(w => w.id !== id));
-      const widget = placedWidgets[widgetIndex];
-      setWidgets(prev => [...prev, { ...widget, isPlaced: false, position: undefined }]);
-    }
+    setPlacedWidgets(prev => prev.filter(w => w.id !== id));
   };
 
   const sendMessage = (content: string) => {
@@ -213,13 +180,10 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   return (
     <WorkspaceContext.Provider
       value={{
-        widgets,
         placedWidgets,
         activeWidgetId,
         messages,
         isProcessing,
-        addWidget,
-        placeWidget,
         removeWidget,
         setActiveWidgetId,
         sendMessage,

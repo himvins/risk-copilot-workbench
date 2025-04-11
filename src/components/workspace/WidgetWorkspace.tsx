@@ -1,7 +1,7 @@
 
 import React from "react";
 import { useWorkspace } from "@/context/WorkspaceContext";
-import { Droppable, Draggable } from "@hello-pangea/dnd";
+import { Droppable } from "@hello-pangea/dnd";
 import { RiskExposureWidget } from "./widgets/RiskExposureWidget";
 import { CounterpartyAnalysisWidget } from "./widgets/CounterpartyAnalysisWidget";
 import { MarketVolatilityWidget } from "./widgets/MarketVolatilityWidget";
@@ -17,64 +17,18 @@ const widgetComponents: Record<string, React.FC<any>> = {
 };
 
 export function WidgetWorkspace() {
-  const { widgets, placedWidgets, placeWidget, removeWidget } = useWorkspace();
+  const { placedWidgets, removeWidget } = useWorkspace();
 
   return (
     <div className="relative h-full">
-      {/* Available widgets */}
-      <Droppable droppableId="widget-list" direction="horizontal">
-        {(provided) => (
-          <div
-            ref={provided.innerRef}
-            {...provided.droppableProps}
-            className="flex gap-2 p-3 overflow-x-auto border-b border-border bg-background/50"
-          >
-            {widgets.length === 0 ? (
-              <div className="text-xs text-muted-foreground px-4 py-2">
-                No widgets available - add some from the gallery
-              </div>
-            ) : (
-              widgets.map((widget, index) => {
-                const WidgetComponent = widgetComponents[widget.type];
-                return (
-                  <Draggable
-                    key={widget.id}
-                    draggableId={widget.id}
-                    index={index}
-                  >
-                    {(provided, snapshot) => (
-                      <div
-                        ref={provided.innerRef}
-                        {...provided.draggableProps}
-                        {...provided.dragHandleProps}
-                        className={`
-                          flex-shrink-0 w-[250px] h-[150px]
-                          ${snapshot.isDragging ? "widget-dragging" : ""}
-                        `}
-                      >
-                        <WidgetComponent
-                          widget={widget}
-                          onClose={removeWidget}
-                        />
-                      </div>
-                    )}
-                  </Draggable>
-                );
-              })
-            )}
-            {provided.placeholder}
-          </div>
-        )}
-      </Droppable>
-
-      {/* Workspace area */}
+      {/* Workspace area - now takes up the full height */}
       <Droppable droppableId="workspace" direction="vertical">
         {(provided, snapshot) => (
           <div
             ref={provided.innerRef}
             {...provided.droppableProps}
             className={`
-              h-[calc(100%-76px)] p-6 overflow-auto grid grid-cols-2 gap-6 auto-rows-min
+              h-full p-6 overflow-auto grid grid-cols-2 gap-6 auto-rows-min
               ${snapshot.isDraggingOver ? "widget-drop-target" : ""}
             `}
           >
@@ -96,7 +50,7 @@ export function WidgetWorkspace() {
               <div className="col-span-2 h-full flex flex-col items-center justify-center text-muted-foreground">
                 <p className="text-sm mb-2">Drag widgets here to build your workspace</p>
                 <p className="text-xs">
-                  Add widgets from the gallery on the left or from the toolbar above
+                  Add widgets from the gallery on the left or use the chatbot on the right
                 </p>
               </div>
             )}
