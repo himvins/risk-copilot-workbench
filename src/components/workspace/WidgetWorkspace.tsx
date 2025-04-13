@@ -40,6 +40,7 @@ export function WidgetWorkspace() {
                 <div
                   key={widget.id}
                   className="min-h-[300px] w-full"
+                  data-widget-id={widget.id}
                 >
                   <WidgetComponent
                     widget={widget}

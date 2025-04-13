@@ -4,6 +4,7 @@ import { WidgetComponentProps } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { X, AlertTriangle, ShieldCheck, Info, Sparkles } from "lucide-react";
 import { useWorkspace } from "@/context/WorkspaceContext";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const baseCounterpartyData = [
   { 
@@ -116,7 +117,7 @@ export function CounterpartyAnalysisWidget({ widget, onClose }: WidgetComponentP
     return value;
   };
 
-  // Dynamic grid classes based on column count
+  // Generate grid template columns CSS
   const gridTemplateColumns = `repeat(${totalColumnCount}, minmax(80px, 1fr))`;
 
   return (
@@ -130,9 +131,10 @@ export function CounterpartyAnalysisWidget({ widget, onClose }: WidgetComponentP
           <X size={16} />
         </button>
       </CardHeader>
-      <CardContent className="p-0">
+      <CardContent className="p-0 flex flex-col">
+        {/* Fixed Header */}
         <div 
-          className="p-2 text-xs font-medium border-b border-border bg-muted/30"
+          className="p-2 text-xs font-medium border-b border-border bg-muted/30 sticky top-0 z-10"
           style={{ display: 'grid', gridTemplateColumns }}
         >
           <div className="px-2">ID</div>
@@ -143,40 +145,51 @@ export function CounterpartyAnalysisWidget({ widget, onClose }: WidgetComponentP
           
           {/* Additional AI-powered columns */}
           {additionalColumns.map(column => (
-            <div key={column.id} className="flex items-center gap-1 text-primary px-2 bg-primary/5 rounded-sm">
+            <div 
+              key={column.id} 
+              className="flex items-center gap-1 text-primary px-2 mx-1 py-0.5 bg-primary/5 rounded-sm"
+            >
               <Sparkles size={12} className="text-primary" />
               {column.name}
             </div>
           ))}
         </div>
-        <div className="max-h-[230px] overflow-y-auto">
-          {baseCounterpartyData.map((cp) => (
-            <div 
-              key={cp.id} 
-              className="p-2 text-xs border-b border-border/50 hover:bg-muted/20"
-              style={{ display: 'grid', gridTemplateColumns }}
-            >
-              <div className="px-2">{cp.id}</div>
-              <div className="px-2 font-medium">{cp.name}</div>
-              <div className="px-2">{cp.exposure}</div>
-              <div className="px-2">{cp.rating}</div>
-              <div className={`flex items-center gap-1 px-2 ${cp.riskColor}`}>
-                {cp.riskScore === "Low" && <ShieldCheck size={14} />}
-                {cp.riskScore === "Medium" && <Info size={14} />}
-                {cp.riskScore === "High" && <AlertTriangle size={14} />}
-                {cp.riskScore}
-              </div>
-              
-              {/* Values for additional columns */}
-              {additionalColumns.map(column => (
-                <div key={column.id} className="px-2 flex items-center gap-1 bg-primary/5">
-                  {getExtendedDataValue(cp.id, column.type)}
+
+        {/* Scrollable Data Area */}
+        <ScrollArea className="max-h-[230px]">
+          <div>
+            {baseCounterpartyData.map((cp) => (
+              <div 
+                key={cp.id} 
+                className="p-2 text-xs border-b border-border/50 hover:bg-muted/20"
+                style={{ display: 'grid', gridTemplateColumns }}
+              >
+                <div className="px-2">{cp.id}</div>
+                <div className="px-2 font-medium">{cp.name}</div>
+                <div className="px-2">{cp.exposure}</div>
+                <div className="px-2">{cp.rating}</div>
+                <div className={`flex items-center gap-1 px-2 ${cp.riskColor}`}>
+                  {cp.riskScore === "Low" && <ShieldCheck size={14} />}
+                  {cp.riskScore === "Medium" && <Info size={14} />}
+                  {cp.riskScore === "High" && <AlertTriangle size={14} />}
+                  {cp.riskScore}
                 </div>
-              ))}
-            </div>
-          ))}
-        </div>
-        <div className="p-3 flex justify-between text-xs text-muted-foreground">
+                
+                {/* Values for additional columns */}
+                {additionalColumns.map(column => (
+                  <div 
+                    key={column.id} 
+                    className="px-2 mx-1 py-1 flex items-center gap-1 bg-primary/5 rounded-sm"
+                  >
+                    {getExtendedDataValue(cp.id, column.type)}
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        </ScrollArea>
+
+        <div className="p-3 flex justify-between text-xs text-muted-foreground mt-auto">
           <span>Total Counterparties: 42</span>
           <span>Total Exposure: $132.7M</span>
         </div>
