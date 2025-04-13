@@ -117,10 +117,10 @@ export function CounterpartyAnalysisWidget({ widget, onClose }: WidgetComponentP
   };
 
   // Dynamic grid classes based on column count
-  const gridTemplateColumns = `repeat(${totalColumnCount}, minmax(0, 1fr))`;
+  const gridTemplateColumns = `repeat(${totalColumnCount}, minmax(80px, 1fr))`;
 
   return (
-    <Card className="widget min-h-[300px]">
+    <Card className="widget min-h-[300px] overflow-hidden">
       <CardHeader className="widget-header">
         <CardTitle className="text-sm font-medium">{widget.title}</CardTitle>
         <button 
@@ -135,15 +135,15 @@ export function CounterpartyAnalysisWidget({ widget, onClose }: WidgetComponentP
           className="p-2 text-xs font-medium border-b border-border bg-muted/30"
           style={{ display: 'grid', gridTemplateColumns }}
         >
-          <div>ID</div>
-          <div>Name</div>
-          <div>Exposure</div>
-          <div>Rating</div>
-          <div>Risk</div>
+          <div className="px-2">ID</div>
+          <div className="px-2">Name</div>
+          <div className="px-2">Exposure</div>
+          <div className="px-2">Rating</div>
+          <div className="px-2">Risk</div>
           
           {/* Additional AI-powered columns */}
           {additionalColumns.map(column => (
-            <div key={column.id} className="flex items-center gap-1 text-primary">
+            <div key={column.id} className="flex items-center gap-1 text-primary px-2 bg-primary/5 rounded-sm">
               <Sparkles size={12} className="text-primary" />
               {column.name}
             </div>
@@ -156,11 +156,11 @@ export function CounterpartyAnalysisWidget({ widget, onClose }: WidgetComponentP
               className="p-2 text-xs border-b border-border/50 hover:bg-muted/20"
               style={{ display: 'grid', gridTemplateColumns }}
             >
-              <div>{cp.id}</div>
-              <div className="font-medium">{cp.name}</div>
-              <div>{cp.exposure}</div>
-              <div>{cp.rating}</div>
-              <div className={`flex items-center gap-1 ${cp.riskColor}`}>
+              <div className="px-2">{cp.id}</div>
+              <div className="px-2 font-medium">{cp.name}</div>
+              <div className="px-2">{cp.exposure}</div>
+              <div className="px-2">{cp.rating}</div>
+              <div className={`flex items-center gap-1 px-2 ${cp.riskColor}`}>
                 {cp.riskScore === "Low" && <ShieldCheck size={14} />}
                 {cp.riskScore === "Medium" && <Info size={14} />}
                 {cp.riskScore === "High" && <AlertTriangle size={14} />}
@@ -169,7 +169,7 @@ export function CounterpartyAnalysisWidget({ widget, onClose }: WidgetComponentP
               
               {/* Values for additional columns */}
               {additionalColumns.map(column => (
-                <div key={column.id} className="flex items-center gap-1">
+                <div key={column.id} className="px-2 flex items-center gap-1 bg-primary/5">
                   {getExtendedDataValue(cp.id, column.type)}
                 </div>
               ))}

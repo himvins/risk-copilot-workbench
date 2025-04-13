@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { Widget, Message, WidgetType, WidgetCustomization } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
@@ -20,7 +21,7 @@ interface WorkspaceContextProps {
 
 const WorkspaceContext = createContext<WorkspaceContextProps | null>(null);
 
-export function WorkspaceProvider({ children }: { children: ReactNode }) {
+export function WorkspaceProvider({ children }: { children: ReactNode | ((context: WorkspaceContextProps) => ReactNode) }) {
   const [placedWidgets, setPlacedWidgets] = useState<Widget[]>([]);
   const [widgetCustomizations, setWidgetCustomizations] = useState<Record<string, WidgetCustomization>>({});
   const [activeWidgetId, setActiveWidgetId] = useState<string | null>(null);
@@ -77,19 +78,8 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     respondToMessage(`I've added the ${columnName} column to your ${widget?.title} widget.`);
   };
 
-  // Expose the workspace context to the window for the drag and drop operations
-  useEffect(() => {
-    const contextEl = document.querySelector('[data-workspace-context]');
-    if (contextEl) {
-      (contextEl as any).__workspaceContext = {
-        addWidgetByType,
-        removeWidgetByType,
-        addColumnToWidget
-      };
-    }
-  }, [placedWidgets]); // Re-run when placedWidgets changes
-
   const addWidgetByType = (type: WidgetType) => {
+    console.log("Adding widget by type:", type);
     const title = findWidgetTitleByType(type);
     
     // Check if widget already exists in placed widgets
@@ -106,6 +96,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       };
       
       setPlacedWidgets(prev => [...prev, newWidget]);
+      console.log("Added new widget:", newWidget);
       
       // Respond with a confirmation
       respondToMessage(`I've added the ${title} widget to your workspace.`);
@@ -305,25 +296,25 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     setIsProcessing(false);
   };
 
+  const contextValue: WorkspaceContextProps = {
+    placedWidgets,
+    activeWidgetId,
+    messages,
+    isProcessing,
+    removeWidget,
+    setActiveWidgetId,
+    sendMessage,
+    respondToMessage,
+    addWidgetByType,
+    removeWidgetByType,
+    findWidgetTitleByType,
+    getWidgetCustomization,
+    addColumnToWidget
+  };
+
   return (
-    <WorkspaceContext.Provider
-      value={{
-        placedWidgets,
-        activeWidgetId,
-        messages,
-        isProcessing,
-        removeWidget,
-        setActiveWidgetId,
-        sendMessage,
-        respondToMessage,
-        addWidgetByType,
-        removeWidgetByType,
-        findWidgetTitleByType,
-        getWidgetCustomization,
-        addColumnToWidget
-      }}
-    >
-      {children}
+    <WorkspaceContext.Provider value={contextValue}>
+      {typeof children === 'function' ? children(contextValue) : children}
     </WorkspaceContext.Provider>
   );
 }

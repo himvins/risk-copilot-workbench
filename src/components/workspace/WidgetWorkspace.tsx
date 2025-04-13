@@ -22,7 +22,7 @@ export function WidgetWorkspace() {
   const isMobile = useIsMobile();
 
   return (
-    <div className="relative h-full">
+    <div className="relative h-full" id="widget-workspace-container">
       <Droppable droppableId="workspace" direction="vertical" type="WIDGET">
         {(provided, snapshot) => (
           <div
@@ -32,6 +32,7 @@ export function WidgetWorkspace() {
               h-full p-4 overflow-auto grid ${isMobile ? "grid-cols-1" : "grid-cols-2"} gap-4 auto-rows-min
               ${snapshot.isDraggingOver ? "bg-primary/5 border-2 border-dashed border-primary/30" : ""}
             `}
+            data-droppable="true"
           >
             {placedWidgets.map((widget) => {
               const WidgetComponent = widgetComponents[widget.type];

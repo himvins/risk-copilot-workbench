@@ -70,7 +70,7 @@ export function WidgetGallery() {
         </div>
       )}
 
-      <Droppable droppableId="widget-gallery" isDropDisabled>
+      <Droppable droppableId="widget-gallery" isDropDisabled type="WIDGET">
         {(provided) => (
           <div 
             className="space-y-2"
