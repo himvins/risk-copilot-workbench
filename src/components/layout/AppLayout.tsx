@@ -1,12 +1,16 @@
 
-import React from "react";
+import React, { useRef, useEffect } from "react";
 import { WidgetGallery } from "../workspace/WidgetGallery";
 import { WidgetWorkspace } from "../workspace/WidgetWorkspace";
 import { RiskCopilot } from "../workspace/RiskCopilot";
 import { WorkspaceProvider } from "@/context/WorkspaceContext";
 import { DragDropContext, DropResult } from "@hello-pangea/dnd";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 
 export function AppLayout() {
+  const workspaceContextRef = useRef<HTMLDivElement>(null);
+  
   // Handle drag end event for the entire application
   const handleDragEnd = (result: DropResult) => {
     // If there's no destination, the item was dropped outside droppable areas
@@ -20,17 +24,18 @@ export function AppLayout() {
       const widgetType = draggableId.replace("gallery-", "") as any;
       
       // Get the context and add the widget
-      const workspaceContext = document.querySelector("[data-workspace-context]") as any;
-      if (workspaceContext && workspaceContext.__workspaceContext) {
-        const { addWidgetByType } = workspaceContext.__workspaceContext;
+      if (workspaceContextRef.current && (workspaceContextRef.current as any).__workspaceContext) {
+        const { addWidgetByType } = (workspaceContextRef.current as any).__workspaceContext;
         addWidgetByType(widgetType);
       }
     }
   };
 
+  const isMobile = useIsMobile();
+
   return (
     <WorkspaceProvider>
-      <div className="h-screen flex flex-col" data-workspace-context>
+      <div className="h-screen flex flex-col" ref={workspaceContextRef}>
         <header className="bg-card p-3 border-b border-border flex items-center">
           <div className="flex items-center gap-2">
             <div className="bg-primary p-1 rounded">
@@ -46,17 +51,23 @@ export function AppLayout() {
         
         <DragDropContext onDragEnd={handleDragEnd}>
           <main className="flex-1 flex overflow-hidden">
-            <aside className="w-[300px] border-r border-border">
-              <WidgetGallery />
-            </aside>
-            
-            <div className="flex-1 overflow-hidden">
-              <WidgetWorkspace />
-            </div>
-            
-            <aside className="w-[350px] border-l border-border">
-              <RiskCopilot />
-            </aside>
+            <ResizablePanelGroup direction="horizontal" className="w-full">
+              <ResizablePanel defaultSize={20} minSize={isMobile ? 10 : 15} maxSize={30}>
+                <WidgetGallery />
+              </ResizablePanel>
+              
+              <ResizableHandle withHandle />
+              
+              <ResizablePanel defaultSize={50}>
+                <WidgetWorkspace />
+              </ResizablePanel>
+              
+              <ResizableHandle withHandle />
+              
+              <ResizablePanel defaultSize={30} minSize={isMobile ? 20 : 25}>
+                <RiskCopilot />
+              </ResizablePanel>
+            </ResizablePanelGroup>
           </main>
         </DragDropContext>
       </div>

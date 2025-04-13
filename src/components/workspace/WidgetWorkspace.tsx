@@ -6,6 +6,7 @@ import { RiskExposureWidget } from "./widgets/RiskExposureWidget";
 import { CounterpartyAnalysisWidget } from "./widgets/CounterpartyAnalysisWidget";
 import { MarketVolatilityWidget } from "./widgets/MarketVolatilityWidget";
 import { RiskAlertsWidget } from "./widgets/RiskAlertsWidget";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const widgetComponents: Record<string, React.FC<any>> = {
   "risk-exposure": RiskExposureWidget,
@@ -18,6 +19,7 @@ const widgetComponents: Record<string, React.FC<any>> = {
 
 export function WidgetWorkspace() {
   const { placedWidgets, removeWidget } = useWorkspace();
+  const isMobile = useIsMobile();
 
   return (
     <div className="relative h-full">
@@ -27,7 +29,7 @@ export function WidgetWorkspace() {
             ref={provided.innerRef}
             {...provided.droppableProps}
             className={`
-              h-full p-6 overflow-auto grid grid-cols-2 gap-6 auto-rows-min
+              h-full p-4 overflow-auto grid ${isMobile ? "grid-cols-1" : "grid-cols-2"} gap-4 auto-rows-min
               ${snapshot.isDraggingOver ? "bg-primary/5 border-2 border-dashed border-primary/30" : ""}
             `}
           >
@@ -36,7 +38,7 @@ export function WidgetWorkspace() {
               return (
                 <div
                   key={widget.id}
-                  className="min-h-[300px]"
+                  className="min-h-[300px] w-full"
                 >
                   <WidgetComponent
                     widget={widget}
@@ -46,7 +48,7 @@ export function WidgetWorkspace() {
               );
             })}
             {placedWidgets.length === 0 && (
-              <div className="col-span-2 h-full flex flex-col items-center justify-center text-muted-foreground">
+              <div className="col-span-full h-full flex flex-col items-center justify-center text-muted-foreground">
                 <p className="text-sm mb-2">Drag widgets here to build your workspace</p>
                 <p className="text-xs">
                   Add widgets from the gallery on the left or use the chatbot on the right

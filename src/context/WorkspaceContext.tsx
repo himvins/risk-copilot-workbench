@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { Widget, Message, WidgetType, WidgetCustomization } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
@@ -49,14 +48,24 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
 
   // Add a column to a widget
   const addColumnToWidget = (widgetId: string, columnType: string, columnName: string) => {
+    // Check if column already exists
+    const currentCustomization = widgetCustomizations[widgetId] || { additionalColumns: [] };
+    const columnExists = currentCustomization.additionalColumns?.some(
+      col => col.type === columnType
+    );
+    
+    if (columnExists) {
+      respondToMessage(`The ${columnName} column is already added to this widget.`);
+      return;
+    }
+    
     setWidgetCustomizations(prev => {
-      const currentCustomization = prev[widgetId] || { additionalColumns: [] };
       return {
         ...prev,
         [widgetId]: {
           ...currentCustomization,
           additionalColumns: [
-            ...currentCustomization.additionalColumns,
+            ...(currentCustomization.additionalColumns || []),
             { id: uuidv4(), type: columnType, name: columnName }
           ]
         }
@@ -78,7 +87,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
         addColumnToWidget
       };
     }
-  }, []);
+  }, [placedWidgets]); // Re-run when placedWidgets changes
 
   const addWidgetByType = (type: WidgetType) => {
     const title = findWidgetTitleByType(type);
@@ -104,26 +113,26 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       // Suggest columns if it's the counterparty widget
       if (type === 'counterparty-analysis') {
         setTimeout(() => {
+          const widget = placedWidgets.find(w => w.type === 'counterparty-analysis') || newWidget;
+          
+          // Store the new widget ID in a variable to ensure we're targeting the correct widget
+          const widgetId = widget.id;
+          
           const actions: Message['actions'] = [
             {
               id: uuidv4(),
               label: 'Add Profitability Column',
-              action: () => {
-                const widget = placedWidgets.find(w => w.type === 'counterparty-analysis');
-                if (widget) {
-                  addColumnToWidget(widget.id, 'profitability', 'Profitability');
-                }
-              }
+              action: () => addColumnToWidget(widgetId, 'profitability', 'Profitability')
             },
             {
               id: uuidv4(),
               label: 'Add Sentiment Column',
-              action: () => {
-                const widget = placedWidgets.find(w => w.type === 'counterparty-analysis');
-                if (widget) {
-                  addColumnToWidget(widget.id, 'sentiment', 'Sentiment');
-                }
-              }
+              action: () => addColumnToWidget(widgetId, 'sentiment', 'Sentiment')
+            },
+            {
+              id: uuidv4(),
+              label: 'Add Volatility Column',
+              action: () => addColumnToWidget(widgetId, 'volatility', 'Volatility')
             }
           ];
           
@@ -256,21 +265,22 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
         
         // If counterparty widget exists, add column suggestions
         if (counterpartyWidget) {
+          const widgetId = counterpartyWidget.id;
           actions = [
             {
               id: uuidv4(),
               label: 'Add Profitability Column',
-              action: () => addColumnToWidget(counterpartyWidget.id, 'profitability', 'Profitability')
+              action: () => addColumnToWidget(widgetId, 'profitability', 'Profitability')
             },
             {
               id: uuidv4(),
               label: 'Add Sentiment Column',
-              action: () => addColumnToWidget(counterpartyWidget.id, 'sentiment', 'Sentiment')
+              action: () => addColumnToWidget(widgetId, 'sentiment', 'Sentiment')
             },
             {
               id: uuidv4(),
               label: 'Add Volatility Column',
-              action: () => addColumnToWidget(counterpartyWidget.id, 'volatility', 'Volatility')
+              action: () => addColumnToWidget(widgetId, 'volatility', 'Volatility')
             },
             ...actions
           ];

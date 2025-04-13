@@ -79,6 +79,9 @@ export function CounterpartyAnalysisWidget({ widget, onClose }: WidgetComponentP
   // Get widget-specific customizations (columns)
   const customization = getWidgetCustomization(widget.id);
   const additionalColumns = customization?.additionalColumns || [];
+  
+  // Calculate total columns (base + additional)
+  const totalColumnCount = 5 + additionalColumns.length;
 
   // Function to render the appropriate value for each added column
   const getExtendedDataValue = (cpId: string, columnName: string) => {
@@ -113,6 +116,9 @@ export function CounterpartyAnalysisWidget({ widget, onClose }: WidgetComponentP
     return value;
   };
 
+  // Dynamic grid classes based on column count
+  const gridTemplateColumns = `repeat(${totalColumnCount}, minmax(0, 1fr))`;
+
   return (
     <Card className="widget min-h-[300px]">
       <CardHeader className="widget-header">
@@ -125,7 +131,10 @@ export function CounterpartyAnalysisWidget({ widget, onClose }: WidgetComponentP
         </button>
       </CardHeader>
       <CardContent className="p-0">
-        <div className={`grid ${5 + additionalColumns.length > 5 ? `grid-cols-${5 + additionalColumns.length}` : 'grid-cols-5'} p-2 text-xs font-medium border-b border-border bg-muted/30`}>
+        <div 
+          className="p-2 text-xs font-medium border-b border-border bg-muted/30"
+          style={{ display: 'grid', gridTemplateColumns }}
+        >
           <div>ID</div>
           <div>Name</div>
           <div>Exposure</div>
@@ -142,7 +151,11 @@ export function CounterpartyAnalysisWidget({ widget, onClose }: WidgetComponentP
         </div>
         <div className="max-h-[230px] overflow-y-auto">
           {baseCounterpartyData.map((cp) => (
-            <div key={cp.id} className={`grid ${5 + additionalColumns.length > 5 ? `grid-cols-${5 + additionalColumns.length}` : 'grid-cols-5'} p-2 text-xs border-b border-border/50 hover:bg-muted/20`}>
+            <div 
+              key={cp.id} 
+              className="p-2 text-xs border-b border-border/50 hover:bg-muted/20"
+              style={{ display: 'grid', gridTemplateColumns }}
+            >
               <div>{cp.id}</div>
               <div className="font-medium">{cp.name}</div>
               <div>{cp.exposure}</div>
