@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useWorkspace } from "@/context/WorkspaceContext";
 import { Droppable } from "@hello-pangea/dnd";
@@ -7,6 +8,7 @@ import { MarketVolatilityWidget } from "./widgets/MarketVolatilityWidget";
 import { RiskAlertsWidget } from "./widgets/RiskAlertsWidget";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ResizableWidget } from "./ResizableWidget";
+import { useToast } from "@/hooks/use-toast";
 
 const widgetComponents: Record<string, React.FC<any>> = {
   "risk-exposure": RiskExposureWidget,
@@ -20,6 +22,15 @@ const widgetComponents: Record<string, React.FC<any>> = {
 export function WidgetWorkspace() {
   const { placedWidgets, removeWidget } = useWorkspace();
   const isMobile = useIsMobile();
+  const { toast } = useToast();
+
+  const handleWidgetRemove = (id: string) => {
+    removeWidget(id);
+    toast({
+      title: "Widget removed",
+      description: "The widget has been removed from your workspace"
+    });
+  };
 
   return (
     <div className="relative h-full" id="widget-workspace-container">
@@ -42,8 +53,8 @@ export function WidgetWorkspace() {
                   className="min-h-[300px] w-full"
                   data-widget-id={widget.id}
                 >
-                  <ResizableWidget onClose={() => removeWidget(widget.id)}>
-                    <WidgetComponent widget={widget} onClose={removeWidget} />
+                  <ResizableWidget onClose={() => handleWidgetRemove(widget.id)}>
+                    <WidgetComponent widget={widget} />
                   </ResizableWidget>
                 </div>
               );
