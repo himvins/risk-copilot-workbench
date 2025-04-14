@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useWorkspace } from "@/context/WorkspaceContext";
 import { Droppable } from "@hello-pangea/dnd";
@@ -7,6 +6,7 @@ import { CounterpartyAnalysisWidget } from "./widgets/CounterpartyAnalysisWidget
 import { MarketVolatilityWidget } from "./widgets/MarketVolatilityWidget";
 import { RiskAlertsWidget } from "./widgets/RiskAlertsWidget";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { ResizableWidget } from "./ResizableWidget";
 
 const widgetComponents: Record<string, React.FC<any>> = {
   "risk-exposure": RiskExposureWidget,
@@ -42,10 +42,9 @@ export function WidgetWorkspace() {
                   className="min-h-[300px] w-full"
                   data-widget-id={widget.id}
                 >
-                  <WidgetComponent
-                    widget={widget}
-                    onClose={removeWidget}
-                  />
+                  <ResizableWidget onClose={() => removeWidget(widget.id)}>
+                    <WidgetComponent widget={widget} onClose={removeWidget} />
+                  </ResizableWidget>
                 </div>
               );
             })}

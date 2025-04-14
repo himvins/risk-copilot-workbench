@@ -1,5 +1,4 @@
-
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useState } from "react";
 import { WidgetGallery } from "../workspace/WidgetGallery";
 import { WidgetWorkspace } from "../workspace/WidgetWorkspace";
 import { RiskCopilot } from "../workspace/RiskCopilot";
@@ -8,18 +7,15 @@ import { DragDropContext, DropResult } from "@hello-pangea/dnd";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { Collapsible } from "@/components/ui/collapsible";
 
 export function AppLayout() {
   const { current: workspaceRef } = useRef<any>({});
   const [isGalleryCollapsed, setIsGalleryCollapsed] = useState(false);
   const [isCopilotCollapsed, setIsCopilotCollapsed] = useState(false);
   
-  // Handle drag end event for the entire application
   const handleDragEnd = (result: DropResult) => {
     console.log("Drag ended:", result);
     
-    // If there's no destination, the item was dropped outside droppable areas
     if (!result.destination) {
       console.log("No destination");
       return;
@@ -27,11 +23,9 @@ export function AppLayout() {
     
     const { source, destination, draggableId } = result;
     
-    // Handle drag from gallery to workspace
     if (source.droppableId === "widget-gallery" && destination.droppableId === "workspace") {
       console.log("Dragging from gallery to workspace");
       
-      // Extract the widget type from the draggableId (format: "gallery-[widget-type]")
       const widgetType = draggableId.replace("gallery-", "") as any;
       
       if (workspaceRef.current && workspaceRef.current.addWidgetByType) {
@@ -43,7 +37,6 @@ export function AppLayout() {
     }
   };
 
-  // Store methods from context
   const storeWorkspaceContext = (context: any) => {
     if (context) {
       workspaceRef.current = {
@@ -57,14 +50,12 @@ export function AppLayout() {
 
   const isMobile = useIsMobile();
 
-  // Handle toggling of panels
   const toggleGallery = () => setIsGalleryCollapsed(!isGalleryCollapsed);
   const toggleCopilot = () => setIsCopilotCollapsed(!isCopilotCollapsed);
 
   return (
     <WorkspaceProvider>
       {(context) => {
-        // Store the context methods in ref for drag and drop
         storeWorkspaceContext(context);
         
         return (
@@ -89,48 +80,46 @@ export function AppLayout() {
                     defaultSize={20} 
                     minSize={isGalleryCollapsed ? 3 : (isMobile ? 10 : 15)} 
                     maxSize={30}
-                    className="transition-all duration-300 ease-in-out"
+                    className={`transition-all duration-300 ease-in-out ${isGalleryCollapsed ? 'w-12' : ''}`}
                   >
-                    <div className="relative h-full flex">
-                      {/* Gallery Toggle Button */}
+                    <div className="relative h-full">
                       <button 
                         onClick={toggleGallery}
-                        className="absolute -right-3 top-1/2 -translate-y-1/2 z-10 bg-card border border-border rounded-full p-1 shadow-md hover:bg-muted transition-colors"
+                        className="absolute right-0 top-4 z-10 bg-card border border-border rounded-l-lg p-1.5 shadow-md hover:bg-muted transition-colors"
                         aria-label={isGalleryCollapsed ? "Expand Gallery" : "Collapse Gallery"}
                       >
                         {isGalleryCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
                       </button>
                       
-                      <div className={`w-full transition-all duration-300 ${isGalleryCollapsed ? "opacity-0" : "opacity-100"}`}>
+                      <div className={`w-full transition-all duration-300 ${isGalleryCollapsed ? 'opacity-0 invisible' : 'opacity-100 visible'}`}>
                         <WidgetGallery />
                       </div>
                     </div>
                   </ResizablePanel>
                   
-                  <ResizableHandle withHandle />
+                  <ResizableHandle withHandle className={isGalleryCollapsed || isCopilotCollapsed ? 'invisible' : ''} />
                   
                   <ResizablePanel defaultSize={50} className="transition-all duration-300">
                     <WidgetWorkspace />
                   </ResizablePanel>
                   
-                  <ResizableHandle withHandle />
+                  <ResizableHandle withHandle className={isGalleryCollapsed || isCopilotCollapsed ? 'invisible' : ''} />
                   
                   <ResizablePanel 
                     defaultSize={30} 
                     minSize={isCopilotCollapsed ? 3 : (isMobile ? 20 : 25)}
-                    className="transition-all duration-300 ease-in-out"
+                    className={`transition-all duration-300 ease-in-out ${isCopilotCollapsed ? 'w-12' : ''}`}
                   >
-                    <div className="relative h-full flex">
-                      {/* Copilot Toggle Button */}
+                    <div className="relative h-full">
                       <button 
                         onClick={toggleCopilot}
-                        className="absolute -left-3 top-1/2 -translate-y-1/2 z-10 bg-card border border-border rounded-full p-1 shadow-md hover:bg-muted transition-colors"
+                        className="absolute left-0 top-4 z-10 bg-card border border-border rounded-r-lg p-1.5 shadow-md hover:bg-muted transition-colors"
                         aria-label={isCopilotCollapsed ? "Expand Copilot" : "Collapse Copilot"}
                       >
                         {isCopilotCollapsed ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
                       </button>
                       
-                      <div className={`w-full transition-all duration-300 ${isCopilotCollapsed ? "opacity-0" : "opacity-100"}`}>
+                      <div className={`w-full transition-all duration-300 ${isCopilotCollapsed ? 'opacity-0 invisible' : 'opacity-100 visible'}`}>
                         <RiskCopilot />
                       </div>
                     </div>
