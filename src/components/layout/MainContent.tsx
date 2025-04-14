@@ -1,7 +1,7 @@
 
 import React, { useRef } from "react";
 import { DragDropContext, DropResult } from "@hello-pangea/dnd";
-import { ResizablePanelGroup, ResizableHandle } from "@/components/ui/resizable";
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 import { WidgetGallery } from "../workspace/WidgetGallery";
 import { WidgetWorkspace } from "../workspace/WidgetWorkspace";
 import { RiskCopilot } from "../workspace/RiskCopilot";
