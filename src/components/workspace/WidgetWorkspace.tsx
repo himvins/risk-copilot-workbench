@@ -1,7 +1,7 @@
 
-import React from "react";
+import React, { useState, useRef } from "react";
 import { useWorkspace } from "@/context/WorkspaceContext";
-import { Droppable } from "@hello-pangea/dnd";
+import { Droppable, Draggable } from "@hello-pangea/dnd";
 import { RiskExposureWidget } from "./widgets/RiskExposureWidget";
 import { CounterpartyAnalysisWidget } from "./widgets/CounterpartyAnalysisWidget";
 import { MarketVolatilityWidget } from "./widgets/MarketVolatilityWidget";
@@ -20,9 +20,10 @@ const widgetComponents: Record<string, React.FC<any>> = {
 };
 
 export function WidgetWorkspace() {
-  const { placedWidgets, removeWidget } = useWorkspace();
+  const { placedWidgets, removeWidget, reorderWidgets } = useWorkspace();
   const isMobile = useIsMobile();
   const { toast } = useToast();
+  const [isDragging, setIsDragging] = useState(false);
 
   const handleWidgetRemove = (id: string) => {
     removeWidget(id);
@@ -30,6 +31,28 @@ export function WidgetWorkspace() {
       title: "Widget removed",
       description: "The widget has been removed from your workspace"
     });
+  };
+
+  const handleDragStart = () => {
+    setIsDragging(true);
+  };
+
+  const handleDragEnd = (result: any) => {
+    setIsDragging(false);
+    
+    // Handle internal reordering of widgets
+    if (result.destination && 
+        result.source.droppableId === "workspace" && 
+        result.destination.droppableId === "workspace" &&
+        result.source.index !== result.destination.index) {
+      
+      reorderWidgets(result.source.index, result.destination.index);
+      
+      toast({
+        title: "Widget repositioned",
+        description: "The widget has been moved to a new position"
+      });
+    }
   };
 
   return (
@@ -45,18 +68,33 @@ export function WidgetWorkspace() {
             `}
             data-droppable="true"
           >
-            {placedWidgets.map((widget) => {
+            {placedWidgets.map((widget, index) => {
               const WidgetComponent = widgetComponents[widget.type];
               return (
-                <div
-                  key={widget.id}
-                  className="min-h-[300px] w-full"
-                  data-widget-id={widget.id}
+                <Draggable 
+                  key={widget.id} 
+                  draggableId={`placed-${widget.id}`} 
+                  index={index}
+                  disableInteractiveElementBlocking={true}
                 >
-                  <ResizableWidget onClose={() => handleWidgetRemove(widget.id)}>
-                    <WidgetComponent widget={widget} />
-                  </ResizableWidget>
-                </div>
+                  {(provided, snapshot) => (
+                    <div
+                      ref={provided.innerRef}
+                      {...provided.draggableProps}
+                      className={`min-h-[300px] w-full ${snapshot.isDragging ? "opacity-70" : ""}`}
+                      style={{
+                        ...provided.draggableProps.style,
+                      }}
+                    >
+                      <ResizableWidget 
+                        id={widget.id}
+                        onClose={() => handleWidgetRemove(widget.id)}
+                      >
+                        <WidgetComponent widget={widget} />
+                      </ResizableWidget>
+                    </div>
+                  )}
+                </Draggable>
               );
             })}
             {placedWidgets.length === 0 && (
