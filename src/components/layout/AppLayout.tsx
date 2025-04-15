@@ -128,7 +128,7 @@ export function AppLayout() {
                       <div className={`w-full overflow-x-hidden transition-all duration-300 ${
                         galleryVisibility === "collapsed" ? 'opacity-0' : 'opacity-100'
                       }`}>
-                        <WidgetGallery compactMode={galleryVisibility === "icon-only"} />
+                        <WidgetGallery iconOnly={galleryVisibility === "icon-only"} />
                       </div>
                     </div>
                   </ResizablePanel>

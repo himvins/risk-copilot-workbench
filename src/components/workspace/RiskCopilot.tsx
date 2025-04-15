@@ -38,7 +38,7 @@ export function RiskCopilot() {
       </div>
 
       <div className="flex-1 overflow-y-auto p-3 space-y-4">
-        {messages.length === 0 ? (
+        {!messages || messages.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-muted-foreground">
             <Bot size={40} className="mb-2" />
             <p className="text-sm">How can I help you today?</p>

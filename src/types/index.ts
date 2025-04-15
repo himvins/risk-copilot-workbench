@@ -12,6 +12,7 @@ export interface Widget {
     y: number;
   };
   isPlaced?: boolean;
+  columns: string[];  // Adding columns as a required property
 }
 
 export type WidgetType = 
