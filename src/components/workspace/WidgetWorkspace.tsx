@@ -24,6 +24,32 @@ export function WidgetWorkspace() {
   const isMobile = useIsMobile();
   const { toast } = useToast();
   const [isDragging, setIsDragging] = useState(false);
+  const workspaceRef = useRef<HTMLDivElement>(null);
+
+  const findOptimalPosition = () => {
+    if (!workspaceRef.current) return;
+
+    const widgets = workspaceRef.current.querySelectorAll('[data-widget-id]');
+    const workspaceRect = workspaceRef.current.getBoundingClientRect();
+    const occupiedSpaces: Array<DOMRect> = [];
+
+    widgets.forEach((widget) => {
+      const rect = widget.getBoundingClientRect();
+      occupiedSpaces.push(rect);
+    });
+
+    // Start with a position at the top
+    let optimalY = 16; // Initial padding
+    
+    // Find the first available vertical space
+    occupiedSpaces.sort((a, b) => a.top - b.top).forEach((space) => {
+      if (space.bottom + 16 > optimalY) {
+        optimalY = space.bottom + 16; // Add padding
+      }
+    });
+
+    return optimalY;
+  };
 
   const handleWidgetRemove = (id: string) => {
     removeWidget(id);
@@ -40,7 +66,6 @@ export function WidgetWorkspace() {
   const handleDragEnd = (result: any) => {
     setIsDragging(false);
     
-    // Handle internal reordering of widgets
     if (result.destination && 
         result.source.droppableId === "workspace" && 
         result.destination.droppableId === "workspace" &&
@@ -60,16 +85,24 @@ export function WidgetWorkspace() {
       <Droppable droppableId="workspace" direction="vertical" type="WIDGET">
         {(provided, snapshot) => (
           <div
-            ref={provided.innerRef}
+            ref={(el) => {
+              provided.innerRef(el);
+              if (workspaceRef.current !== el) {
+                workspaceRef.current = el;
+              }
+            }}
             {...provided.droppableProps}
             className={`
-              h-full p-4 overflow-auto grid ${isMobile ? "grid-cols-1" : "grid-cols-2"} gap-4 auto-rows-min
+              h-full p-4 overflow-auto ${isMobile ? "grid-cols-1" : "grid-cols-2"} gap-4 auto-rows-min
               ${snapshot.isDraggingOver ? "bg-primary/5 border-2 border-dashed border-primary/30" : ""}
             `}
+            style={{ display: 'block' }}
             data-droppable="true"
           >
             {placedWidgets.map((widget, index) => {
               const WidgetComponent = widgetComponents[widget.type];
+              const optimalY = findOptimalPosition();
+              
               return (
                 <Draggable 
                   key={widget.id} 
@@ -84,6 +117,9 @@ export function WidgetWorkspace() {
                       className={`min-h-[300px] w-full ${snapshot.isDragging ? "opacity-70" : ""}`}
                       style={{
                         ...provided.draggableProps.style,
+                        position: 'absolute',
+                        top: optimalY ? `${optimalY}px` : '16px',
+                        transition: 'all 0.3s ease',
                       }}
                     >
                       <ResizableWidget 
