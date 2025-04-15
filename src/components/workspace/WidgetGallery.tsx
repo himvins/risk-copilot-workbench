@@ -77,7 +77,7 @@ export function WidgetGallery({ iconOnly = false }: WidgetGalleryProps) {
       <Droppable droppableId="widget-gallery" isDropDisabled type="WIDGET">
         {(provided) => (
           <div 
-            className="space-y-2"
+            className={`space-y-2 ${iconOnly ? "flex flex-col items-center" : ""}`}
             ref={provided.innerRef}
             {...provided.droppableProps}
           >
@@ -97,7 +97,7 @@ export function WidgetGallery({ iconOnly = false }: WidgetGalleryProps) {
                       {...provided.draggableProps}
                       {...provided.dragHandleProps}
                       className={`
-                        ${iconOnly || isMobile ? "p-2" : "p-3"} rounded-md border cursor-pointer
+                        ${iconOnly || isMobile ? "p-2 w-10" : "p-3"} rounded-md border cursor-pointer
                         ${snapshot.isDragging ? "opacity-50 ring-2 ring-primary" : ""}
                         ${isPlaced 
                           ? "bg-muted/20 border-border/50 text-muted-foreground" 

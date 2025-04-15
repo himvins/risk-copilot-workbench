@@ -18,7 +18,12 @@ export function AppLayout() {
   const { current: workspaceRef } = useRef<any>({});
   const [galleryVisibility, setGalleryVisibility] = useState<PanelVisibility>("full");
   const [isCopilotCollapsed, setIsCopilotCollapsed] = useState(false);
-  const [defaultSizes, setDefaultSizes] = useState<number[]>([20, 50, 30]); // Initial panel sizes
+  
+  // Define panel sizes based on visibility states
+  const gallerySize = galleryVisibility === "full" ? 20 : galleryVisibility === "icon-only" ? 10 : 5;
+  const copilotSize = isCopilotCollapsed ? 5 : 30;
+  const centerSize = 100 - gallerySize - copilotSize;
+
   const isMobile = useIsMobile();
   const { toast } = useToast();
 
@@ -53,24 +58,7 @@ export function AppLayout() {
         });
       }
     }
-    
-    // Note: Handling widget reordering is now done in the WidgetWorkspace component
   };
-
-  // Recalculate panel sizes when visibility states change
-  useEffect(() => {
-    // Calculate new panel sizes based on visibility
-    let gallerySize = 20;
-    if (galleryVisibility === "icon-only") gallerySize = 10;
-    if (galleryVisibility === "collapsed") gallerySize = 5;
-    
-    let copilotSize = 30;
-    if (isCopilotCollapsed) copilotSize = 5;
-    
-    const centerSize = 100 - gallerySize - copilotSize;
-    
-    setDefaultSizes([gallerySize, centerSize, copilotSize]);
-  }, [galleryVisibility, isCopilotCollapsed]);
 
   // Cycle through gallery panel visibility states
   const cycleGalleryVisibility = () => {
@@ -106,7 +94,7 @@ export function AppLayout() {
                 <ResizablePanelGroup direction="horizontal" className="w-full">
                   {/* Left Panel (Widget Gallery) */}
                   <ResizablePanel 
-                    defaultSize={defaultSizes[0]} 
+                    defaultSize={gallerySize} 
                     minSize={5}
                     maxSize={30}
                     className="transition-all duration-300 ease-in-out"
@@ -143,7 +131,7 @@ export function AppLayout() {
                   
                   {/* Center Panel (Widget Workspace) */}
                   <ResizablePanel 
-                    defaultSize={defaultSizes[1]} 
+                    defaultSize={centerSize}
                     className="transition-all duration-300"
                   >
                     <WidgetWorkspace />
@@ -154,7 +142,7 @@ export function AppLayout() {
                   
                   {/* Right Panel (Risk Copilot) */}
                   <ResizablePanel 
-                    defaultSize={defaultSizes[2]} 
+                    defaultSize={copilotSize} 
                     minSize={5}
                     className="transition-all duration-300 ease-in-out"
                   >
@@ -169,7 +157,7 @@ export function AppLayout() {
                       </button>
                       
                       {/* Copilot Content */}
-                      <div className={`w-full overflow-x-hidden transition-all duration-300 ${isCopilotCollapsed ? 'opacity-0' : 'opacity-100'}`}>
+                      <div className={`w-full h-full overflow-x-hidden transition-all duration-300 ${isCopilotCollapsed ? 'opacity-0' : 'opacity-100'}`}>
                         <RiskCopilot />
                       </div>
                     </div>
