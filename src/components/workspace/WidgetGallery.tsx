@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useWorkspace } from "@/context/WorkspaceContext";
 import { Droppable, Draggable } from "@hello-pangea/dnd";
@@ -15,6 +14,7 @@ interface WidgetTemplate {
 
 interface WidgetGalleryProps {
   iconOnly?: boolean;
+  hidden?: boolean;
 }
 
 const availableWidgets: WidgetTemplate[] = [
@@ -56,9 +56,13 @@ const availableWidgets: WidgetTemplate[] = [
   }
 ];
 
-export function WidgetGallery({ iconOnly = false }: WidgetGalleryProps) {
+export function WidgetGallery({ iconOnly = false, hidden = false }: WidgetGalleryProps) {
   const { placedWidgets, addWidgetByType } = useWorkspace();
   const isMobile = useIsMobile();
+  
+  if (hidden) {
+    return null;
+  }
   
   // Filter out widgets that are already placed on the workspace
   const placedWidgetTypes = new Set(placedWidgets.map(w => w.type));
@@ -97,7 +101,7 @@ export function WidgetGallery({ iconOnly = false }: WidgetGalleryProps) {
                       {...provided.draggableProps}
                       {...provided.dragHandleProps}
                       className={`
-                        ${iconOnly || isMobile ? "p-2 w-10" : "p-3"} rounded-md border cursor-pointer
+                        ${iconOnly ? "p-2 w-10" : "p-3"} rounded-md border cursor-pointer
                         ${snapshot.isDragging ? "opacity-50 ring-2 ring-primary" : ""}
                         ${isPlaced 
                           ? "bg-muted/20 border-border/50 text-muted-foreground" 
@@ -108,11 +112,11 @@ export function WidgetGallery({ iconOnly = false }: WidgetGalleryProps) {
                         addWidgetByType(widget.type)
                       }
                     >
-                      <div className={`flex ${iconOnly || isMobile ? "flex-col items-center" : "items-center gap-3"}`}>
-                        <div className={`bg-secondary/50 p-2 rounded-md ${iconOnly || isMobile ? "mb-1" : ""}`}>
+                      <div className={`flex ${iconOnly ? "flex-col items-center" : "items-center gap-3"}`}>
+                        <div className={`bg-secondary/50 p-2 rounded-md ${iconOnly ? "mb-1" : ""}`}>
                           {widget.icon}
                         </div>
-                        {!iconOnly && !isMobile && (
+                        {!iconOnly && (
                           <div>
                             <h3 className="text-sm font-medium">{widget.title}</h3>
                             <p className="text-xs text-muted-foreground">
@@ -125,7 +129,7 @@ export function WidgetGallery({ iconOnly = false }: WidgetGalleryProps) {
                             )}
                           </div>
                         )}
-                        {(iconOnly || isMobile) && isPlaced && (
+                        {iconOnly && isPlaced && (
                           <span className="text-[10px] px-1 py-0.5 bg-muted/30 rounded">
                             Added
                           </span>

@@ -7,18 +7,28 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
-export function RiskCopilot() {
+interface RiskCopilotProps {
+  hidden?: boolean;
+}
+
+const suggestions = [
+  "How to analyze counterparty risk?",
+  "Show me market volatility trends",
+  "What are the current risk alerts?",
+  "Explain portfolio risk exposure",
+  "Generate risk report summary"
+];
+
+export function RiskCopilot({ hidden = false }: RiskCopilotProps) {
   const { messages, isProcessing, sendMessage } = useWorkspace();
   const [inputValue, setInputValue] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Auto-scroll to the latest message
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Auto-focus input on load
   useEffect(() => {
     inputRef.current?.focus();
   }, []);
@@ -31,6 +41,10 @@ export function RiskCopilot() {
     }
   };
 
+  if (hidden) {
+    return null;
+  }
+
   return (
     <div className="h-full flex flex-col bg-secondary/30">
       <div className="p-4 border-b border-border">
@@ -40,9 +54,9 @@ export function RiskCopilot() {
         </p>
       </div>
 
-      {/* Messages Container with Scroll Area */}
-      <ScrollArea className="flex-1 p-4 overflow-y-auto">
-        <div className="space-y-4">
+      {/* Messages Container */}
+      <ScrollArea className="flex-1">
+        <div className="p-4 space-y-4">
           {messages && messages.length > 0 ? (
             messages.map((message) => (
               <Card
@@ -71,9 +85,22 @@ export function RiskCopilot() {
           ) : (
             <div className="text-center text-muted-foreground my-8">
               <p>No messages yet</p>
-              <p className="text-sm mt-1">
-                Ask me about risk insights or request dashboard widgets
-              </p>
+              <p className="text-sm mt-1">Try these suggestions:</p>
+              <div className="flex flex-col gap-2 mt-4">
+                {suggestions.map((suggestion, index) => (
+                  <Button
+                    key={index}
+                    variant="outline"
+                    className="text-sm"
+                    onClick={() => {
+                      setInputValue(suggestion);
+                      inputRef.current?.focus();
+                    }}
+                  >
+                    {suggestion}
+                  </Button>
+                ))}
+              </div>
             </div>
           )}
           {isProcessing && (
@@ -85,7 +112,7 @@ export function RiskCopilot() {
         </div>
       </ScrollArea>
 
-      {/* Input Area - Always at the bottom */}
+      {/* Input Area */}
       <form
         onSubmit={handleSubmit}
         className="p-4 border-t border-border bg-card mt-auto"
