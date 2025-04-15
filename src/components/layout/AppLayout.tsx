@@ -19,9 +19,14 @@ export function AppLayout() {
   const [galleryVisibility, setGalleryVisibility] = useState<PanelVisibility>("full");
   const [isCopilotCollapsed, setIsCopilotCollapsed] = useState(false);
   
-  // Define panel sizes based on visibility states
-  const gallerySize = galleryVisibility === "full" ? 20 : galleryVisibility === "icon-only" ? 10 : 5;
-  const copilotSize = isCopilotCollapsed ? 5 : 30;
+  // Track user-adjusted sizes
+  const [userGallerySize, setUserGallerySize] = useState(20);
+  const [userCopilotSize, setUserCopilotSize] = useState(30);
+  
+  // Calculate panel sizes based on visibility states
+  const gallerySize = galleryVisibility === "full" ? userGallerySize : 
+                     galleryVisibility === "icon-only" ? 10 : 5;
+  const copilotSize = isCopilotCollapsed ? 5 : userCopilotSize;
   const centerSize = 100 - gallerySize - copilotSize;
 
   const isMobile = useIsMobile();
@@ -60,6 +65,17 @@ export function AppLayout() {
     }
   };
 
+  // Handle panel size changes
+  const handlePanelResize = (sizes: number[]) => {
+    if (galleryVisibility === "full") {
+      setUserGallerySize(sizes[0]);
+    }
+    
+    if (!isCopilotCollapsed) {
+      setUserCopilotSize(sizes[2]);
+    }
+  };
+
   // Cycle through gallery panel visibility states
   const cycleGalleryVisibility = () => {
     setGalleryVisibility(current => {
@@ -91,7 +107,11 @@ export function AppLayout() {
             <Header />
             <DragDropContext onDragEnd={handleDragEnd}>
               <main className="flex-1 flex overflow-hidden">
-                <ResizablePanelGroup direction="horizontal" className="w-full">
+                <ResizablePanelGroup 
+                  direction="horizontal" 
+                  className="w-full"
+                  onLayout={handlePanelResize}
+                >
                   {/* Left Panel (Widget Gallery) */}
                   <ResizablePanel 
                     defaultSize={gallerySize} 
