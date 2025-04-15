@@ -50,7 +50,7 @@ const baseCounterpartyData = [
 ];
 
 // Extended data for AI columns
-const extendedData = {
+const extendedData: Record<string, Record<string, any>> = {
   profitability: {
     "CP001": { value: "+$2.3M", trend: "up" },
     "CP015": { value: "+$1.1M", trend: "up" },
@@ -78,7 +78,7 @@ export function CounterpartyAnalysisWidget({ widget, onClose }: WidgetComponentP
   const { getWidgetCustomization } = useWorkspace();
   
   // Get widget-specific customizations (columns)
-  const customization = getWidgetCustomization(widget.id);
+  const customization = getWidgetCustomization ? getWidgetCustomization(widget.id) : undefined;
   const additionalColumns = customization?.additionalColumns || [];
   
   // Calculate total columns (base + additional)
@@ -86,7 +86,9 @@ export function CounterpartyAnalysisWidget({ widget, onClose }: WidgetComponentP
 
   // Function to render the appropriate value for each added column
   const getExtendedDataValue = (cpId: string, columnName: string) => {
-    const data = extendedData[columnName as keyof typeof extendedData];
+    if (!extendedData[columnName] || !extendedData[columnName][cpId]) return "N/A";
+    
+    const data = extendedData[columnName];
     if (!data || !data[cpId]) return "N/A";
     
     const value = data[cpId].value;

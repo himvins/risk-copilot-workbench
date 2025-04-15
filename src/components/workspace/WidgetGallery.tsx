@@ -13,6 +13,10 @@ interface WidgetTemplate {
   description: string;
 }
 
+interface WidgetGalleryProps {
+  iconOnly?: boolean;
+}
+
 const availableWidgets: WidgetTemplate[] = [
   {
     type: "risk-exposure",
@@ -52,7 +56,7 @@ const availableWidgets: WidgetTemplate[] = [
   }
 ];
 
-export function WidgetGallery() {
+export function WidgetGallery({ iconOnly = false }: WidgetGalleryProps) {
   const { placedWidgets, addWidgetByType } = useWorkspace();
   const isMobile = useIsMobile();
   
@@ -61,7 +65,7 @@ export function WidgetGallery() {
   
   return (
     <div className="h-full bg-secondary/30 p-3 overflow-y-auto">
-      {!isMobile && (
+      {!isMobile && !iconOnly && (
         <div className="mb-4">
           <h2 className="text-sm font-medium mb-2">Widget Gallery</h2>
           <p className="text-xs text-muted-foreground">
@@ -93,7 +97,7 @@ export function WidgetGallery() {
                       {...provided.draggableProps}
                       {...provided.dragHandleProps}
                       className={`
-                        ${isMobile ? "p-2" : "p-3"} rounded-md border cursor-pointer
+                        ${iconOnly || isMobile ? "p-2" : "p-3"} rounded-md border cursor-pointer
                         ${snapshot.isDragging ? "opacity-50 ring-2 ring-primary" : ""}
                         ${isPlaced 
                           ? "bg-muted/20 border-border/50 text-muted-foreground" 
@@ -104,11 +108,11 @@ export function WidgetGallery() {
                         addWidgetByType(widget.type)
                       }
                     >
-                      <div className={`flex ${isMobile ? "flex-col items-center" : "items-center gap-3"}`}>
-                        <div className={`bg-secondary/50 p-2 rounded-md ${isMobile ? "mb-1" : ""}`}>
+                      <div className={`flex ${iconOnly || isMobile ? "flex-col items-center" : "items-center gap-3"}`}>
+                        <div className={`bg-secondary/50 p-2 rounded-md ${iconOnly || isMobile ? "mb-1" : ""}`}>
                           {widget.icon}
                         </div>
-                        {!isMobile && (
+                        {!iconOnly && !isMobile && (
                           <div>
                             <h3 className="text-sm font-medium">{widget.title}</h3>
                             <p className="text-xs text-muted-foreground">
@@ -121,7 +125,7 @@ export function WidgetGallery() {
                             )}
                           </div>
                         )}
-                        {isMobile && isPlaced && (
+                        {(iconOnly || isMobile) && isPlaced && (
                           <span className="text-[10px] px-1 py-0.5 bg-muted/30 rounded">
                             Added
                           </span>

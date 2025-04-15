@@ -1,106 +1,64 @@
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useRef, useEffect, FormEvent, useState } from "react";
 import { useWorkspace } from "@/context/WorkspaceContext";
-import { Button } from "@/components/ui/button";
+import { SendIcon, MicIcon, TrashIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Send, Bot, User, Loader2 } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { format } from "date-fns";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export function RiskCopilot() {
-  const { messages, isProcessing, sendMessage, addWidgetByType } = useWorkspace();
-  const [input, setInput] = useState("");
+  const { messages, isProcessing, sendMessage } = useWorkspace();
+  const [inputValue, setInputValue] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim()) return;
-
-    sendMessage(input);
-    setInput("");
-  };
-
-  // Auto-scroll to bottom when messages change
+  // Auto-scroll to the latest message
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // Auto-focus input on load
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
+
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    if (inputValue.trim() && !isProcessing) {
+      sendMessage(inputValue);
+      setInputValue("");
+    }
+  };
+
   return (
-    <div className="h-full flex flex-col bg-secondary/30 rounded-lg overflow-hidden">
-      <div className="p-3 bg-secondary/50 border-b border-border">
-        <h2 className="text-sm font-medium flex items-center gap-2">
-          <Bot size={16} className="text-primary" />
-          Risk Copilot
-        </h2>
-        <p className="text-xs text-muted-foreground">
-          Ask me to add widgets or analyze your data
+    <div className="h-full flex flex-col bg-secondary/30">
+      <div className="p-4 border-b border-border">
+        <h2 className="text-lg font-semibold">Risk Copilot</h2>
+        <p className="text-sm text-muted-foreground">
+          Ask questions about your risk data or request widgets
         </p>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-3 space-y-4">
-        {!messages || messages.length === 0 ? (
-          <div className="h-full flex flex-col items-center justify-center text-muted-foreground">
-            <Bot size={40} className="mb-2" />
-            <p className="text-sm">How can I help you today?</p>
-            <div className="mt-6 space-y-2">
-              <SuggestedPrompt onClick={(text) => sendMessage(text)}>
-                Add risk exposure widget
-              </SuggestedPrompt>
-              <SuggestedPrompt onClick={(text) => sendMessage(text)}>
-                Show me counterparty analysis
-              </SuggestedPrompt>
-              <SuggestedPrompt onClick={(text) => sendMessage(text)}>
-                What's my current risk exposure across asset classes?
-              </SuggestedPrompt>
-            </div>
-
-            <div className="mt-6">
-              <p className="text-xs text-center mb-2">Quick add widgets:</p>
-              <div className="flex flex-wrap gap-2 justify-center">
-                <QuickAddButton onClick={() => addWidgetByType('risk-exposure')}>
-                  Risk Exposure
-                </QuickAddButton>
-                <QuickAddButton onClick={() => addWidgetByType('market-volatility')}>
-                  Market Volatility
-                </QuickAddButton>
-                <QuickAddButton onClick={() => addWidgetByType('risk-alerts')}>
-                  Risk Alerts
-                </QuickAddButton>
-              </div>
-            </div>
-          </div>
-        ) : (
-          messages.map((message) => (
-            <div
-              key={message.id}
-              className={cn(
-                "flex gap-2 items-start",
-                message.type === "user" ? "flex-row-reverse" : ""
-              )}
-            >
-              {message.type === "user" ? (
-                <div className="bg-accent rounded-full p-1">
-                  <User size={14} />
-                </div>
-              ) : (
-                <div className="bg-secondary rounded-full p-1">
-                  <Bot size={14} />
-                </div>
-              )}
-              <div
-                className={cn(
-                  "copilot-message max-w-[85%]",
-                  message.type === "user" ? "user-message" : "ai-message"
-                )}
+      {/* Messages Container with Scroll Area */}
+      <ScrollArea className="flex-1 p-4 overflow-y-auto">
+        <div className="space-y-4">
+          {messages && messages.length > 0 ? (
+            messages.map((message) => (
+              <Card
+                key={message.id}
+                className={`p-3 max-w-[85%] ${
+                  message.type === "user" ? "ml-auto bg-primary text-white" : "mr-auto"
+                }`}
               >
-                <p className="text-sm">{message.content}</p>
+                <div className="text-sm">{message.content}</div>
                 {message.actions && message.actions.length > 0 && (
-                  <div className="mt-2 flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-2 mt-2">
                     {message.actions.map((action) => (
                       <Button
                         key={action.id}
                         size="sm"
-                        variant="outline"
+                        variant="secondary"
                         onClick={action.action}
                       >
                         {action.label}
@@ -108,83 +66,57 @@ export function RiskCopilot() {
                     ))}
                   </div>
                 )}
-                <div className="text-[10px] text-muted-foreground mt-1">
-                  {format(new Date(message.timestamp), "HH:mm")}
-                </div>
-              </div>
+              </Card>
+            ))
+          ) : (
+            <div className="text-center text-muted-foreground my-8">
+              <p>No messages yet</p>
+              <p className="text-sm mt-1">
+                Ask me about risk insights or request dashboard widgets
+              </p>
             </div>
-          ))
-        )}
-        {isProcessing && (
-          <div className="flex gap-2 items-start">
-            <div className="bg-secondary rounded-full p-1">
-              <Bot size={14} />
-            </div>
-            <div className="copilot-message ai-message">
-              <div className="flex items-center gap-2">
-                <Loader2 size={14} className="animate-spin" />
-                <p className="text-sm">Processing your request...</p>
-              </div>
-            </div>
-          </div>
-        )}
-        <div ref={messagesEndRef} />
-      </div>
+          )}
+          {isProcessing && (
+            <Card className="p-3 max-w-[85%] mr-auto animate-pulse">
+              <div className="text-sm">Thinking...</div>
+            </Card>
+          )}
+          <div ref={messagesEndRef} />
+        </div>
+      </ScrollArea>
 
-      <div className="p-3 border-t border-border">
-        <form onSubmit={handleSubmit} className="flex gap-2">
+      {/* Input Area - Always at the bottom */}
+      <form
+        onSubmit={handleSubmit}
+        className="p-4 border-t border-border bg-card mt-auto"
+      >
+        <div className="flex gap-2 items-center">
           <Input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Try 'Add counterparty analysis'"
+            ref={inputRef}
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            placeholder="Ask a question..."
             disabled={isProcessing}
-            className="bg-card"
+            className="flex-1"
           />
           <Button
             type="submit"
             size="icon"
-            disabled={!input.trim() || isProcessing}
+            disabled={!inputValue.trim() || isProcessing}
           >
-            <Send size={16} />
+            <SendIcon size={18} />
           </Button>
-        </form>
-      </div>
+          <Button
+            type="button"
+            size="icon"
+            variant="outline"
+            onClick={() => setInputValue("")}
+            disabled={!inputValue.trim()}
+          >
+            <TrashIcon size={18} />
+          </Button>
+        </div>
+      </form>
     </div>
-  );
-}
-
-function SuggestedPrompt({
-  children,
-  onClick,
-}: {
-  children: React.ReactNode;
-  onClick: (text: string) => void;
-}) {
-  return (
-    <button
-      onClick={() => onClick(children?.toString() || "")}
-      className="text-xs p-2 bg-card rounded-md hover:bg-primary/20 text-left w-full"
-    >
-      {children}
-    </button>
-  );
-}
-
-function QuickAddButton({
-  children,
-  onClick,
-}: {
-  children: React.ReactNode;
-  onClick: () => void;
-}) {
-  return (
-    <Button
-      onClick={onClick}
-      size="sm"
-      variant="outline"
-      className="bg-card/70 text-xs"
-    >
-      {children}
-    </Button>
   );
 }

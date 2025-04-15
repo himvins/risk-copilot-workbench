@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, useState, ReactNode } from "react";
 import { v4 as uuidv4 } from "uuid";
-import { WidgetType, Widget, Message, MessageAction } from "@/types";
+import { WidgetType, Widget, Message, MessageAction, WidgetCustomization } from "@/types";
 
 // Extended context type to include messaging and reordering capabilities
 interface WorkspaceContextType {
@@ -14,6 +14,7 @@ interface WorkspaceContextType {
   addColumnToWidget: (widgetId: string, columnId: string) => void;
   reorderWidgets: (fromIndex: number, toIndex: number) => void;
   sendMessage: (content: string) => void;
+  getWidgetCustomization: (widgetId: string) => WidgetCustomization | undefined;
 }
 
 const WorkspaceContext = createContext<WorkspaceContextType | undefined>(undefined);
@@ -22,6 +23,7 @@ export function WorkspaceProvider({ children }: { children: (context: WorkspaceC
   const [placedWidgets, setPlacedWidgets] = useState<Widget[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [widgetCustomizations, setWidgetCustomizations] = useState<Record<string, WidgetCustomization>>({});
 
   const addWidgetByType = (widgetType: WidgetType) => {
     setPlacedWidgets((prev) => [
@@ -87,6 +89,11 @@ export function WorkspaceProvider({ children }: { children: (context: WorkspaceC
     });
   };
 
+  // Function to get widget customizations
+  const getWidgetCustomization = (widgetId: string): WidgetCustomization | undefined => {
+    return widgetCustomizations[widgetId];
+  };
+
   // Function to handle sending messages
   const sendMessage = (content: string) => {
     if (!content.trim()) return;
@@ -132,7 +139,8 @@ export function WorkspaceProvider({ children }: { children: (context: WorkspaceC
     removeWidgetByType,
     addColumnToWidget,
     reorderWidgets,
-    sendMessage
+    sendMessage,
+    getWidgetCustomization
   };
 
   return (

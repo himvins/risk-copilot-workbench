@@ -1,5 +1,5 @@
 
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { WorkspaceProvider } from "@/context/WorkspaceContext";
 import { Header } from "./Header";
 import { DragDropContext, DropResult } from "@hello-pangea/dnd";
@@ -18,6 +18,7 @@ export function AppLayout() {
   const { current: workspaceRef } = useRef<any>({});
   const [galleryVisibility, setGalleryVisibility] = useState<PanelVisibility>("full");
   const [isCopilotCollapsed, setIsCopilotCollapsed] = useState(false);
+  const [defaultSizes, setDefaultSizes] = useState<number[]>([20, 50, 30]); // Initial panel sizes
   const isMobile = useIsMobile();
   const { toast } = useToast();
 
@@ -56,6 +57,21 @@ export function AppLayout() {
     // Note: Handling widget reordering is now done in the WidgetWorkspace component
   };
 
+  // Recalculate panel sizes when visibility states change
+  useEffect(() => {
+    // Calculate new panel sizes based on visibility
+    let gallerySize = 20;
+    if (galleryVisibility === "icon-only") gallerySize = 10;
+    if (galleryVisibility === "collapsed") gallerySize = 5;
+    
+    let copilotSize = 30;
+    if (isCopilotCollapsed) copilotSize = 5;
+    
+    const centerSize = 100 - gallerySize - copilotSize;
+    
+    setDefaultSizes([gallerySize, centerSize, copilotSize]);
+  }, [galleryVisibility, isCopilotCollapsed]);
+
   // Cycle through gallery panel visibility states
   const cycleGalleryVisibility = () => {
     setGalleryVisibility(current => {
@@ -77,19 +93,6 @@ export function AppLayout() {
     });
   };
 
-  // Function to determine gallery panel size based on visibility state
-  const getGalleryPanelSize = () => {
-    if (galleryVisibility === "collapsed") return 5;
-    if (galleryVisibility === "icon-only") return 10;
-    return isMobile ? 15 : 20;
-  };
-
-  // Function to determine copilot panel size based on collapse state
-  const getCopilotPanelSize = () => {
-    if (isCopilotCollapsed) return 5;
-    return isMobile ? 20 : 30;
-  };
-
   return (
     <WorkspaceProvider>
       {(context) => {
@@ -103,7 +106,7 @@ export function AppLayout() {
                 <ResizablePanelGroup direction="horizontal" className="w-full">
                   {/* Left Panel (Widget Gallery) */}
                   <ResizablePanel 
-                    defaultSize={getGalleryPanelSize()} 
+                    defaultSize={defaultSizes[0]} 
                     minSize={5}
                     maxSize={30}
                     className="transition-all duration-300 ease-in-out"
@@ -128,7 +131,9 @@ export function AppLayout() {
                       <div className={`w-full overflow-x-hidden transition-all duration-300 ${
                         galleryVisibility === "collapsed" ? 'opacity-0' : 'opacity-100'
                       }`}>
-                        <WidgetGallery iconOnly={galleryVisibility === "icon-only"} />
+                        <WidgetGallery 
+                          iconOnly={galleryVisibility === "icon-only"} 
+                        />
                       </div>
                     </div>
                   </ResizablePanel>
@@ -137,7 +142,10 @@ export function AppLayout() {
                   <ResizableHandle withHandle className={galleryVisibility === "collapsed" || isCopilotCollapsed ? 'invisible' : ''} />
                   
                   {/* Center Panel (Widget Workspace) */}
-                  <ResizablePanel defaultSize={50} className="transition-all duration-300">
+                  <ResizablePanel 
+                    defaultSize={defaultSizes[1]} 
+                    className="transition-all duration-300"
+                  >
                     <WidgetWorkspace />
                   </ResizablePanel>
                   
@@ -146,7 +154,7 @@ export function AppLayout() {
                   
                   {/* Right Panel (Risk Copilot) */}
                   <ResizablePanel 
-                    defaultSize={getCopilotPanelSize()} 
+                    defaultSize={defaultSizes[2]} 
                     minSize={5}
                     className="transition-all duration-300 ease-in-out"
                   >
@@ -157,7 +165,7 @@ export function AppLayout() {
                         className="absolute left-0 top-4 z-10 bg-card border border-border rounded-r-lg p-1.5 shadow-md hover:bg-muted transition-colors"
                         aria-label={isCopilotCollapsed ? "Expand copilot" : "Collapse copilot"}
                       >
-                        {isCopilotCollapsed ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
+                        {isCopilotCollapsed ? <PanelLeft size={16} /> : <ChevronRight size={16} />}
                       </button>
                       
                       {/* Copilot Content */}
