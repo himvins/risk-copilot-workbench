@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from "react";
 import { useWorkspace } from "@/context/WorkspaceContext";
 import { Droppable, Draggable } from "@hello-pangea/dnd";
@@ -59,17 +58,24 @@ export function WidgetWorkspace() {
       occupiedSpaces.push(rect);
     });
 
-    // Start with a position at the top
-    let optimalY = 16; // Initial padding
+    const columnWidth = workspaceRef.current.clientWidth / 2;
+    const columnSpaces: { left: number[], right: number[] } = { left: [], right: [] };
     
-    // Find the first available vertical space
-    occupiedSpaces.sort((a, b) => a.top - b.top).forEach((space) => {
-      if (space.bottom + 16 > optimalY) {
-        optimalY = space.bottom + 16; // Add padding
+    occupiedSpaces.forEach((space) => {
+      if (space.left < columnWidth) {
+        columnSpaces.left.push(space.bottom + 16);
+      } else {
+        columnSpaces.right.push(space.bottom + 16);
       }
     });
 
-    return optimalY;
+    const leftY = columnSpaces.left.length ? Math.max(...columnSpaces.left) : 16;
+    const rightY = columnSpaces.right.length ? Math.max(...columnSpaces.right) : 16;
+
+    return {
+      x: leftY <= rightY ? 0 : columnWidth,
+      y: leftY <= rightY ? leftY : rightY
+    };
   };
 
   const handleWidgetRemove = (id: string) => {
@@ -101,10 +107,8 @@ export function WidgetWorkspace() {
     }
   };
 
-  // Filter widgets based on active tab
   const tabWidgets = placedWidgets.filter(widget => widget.tabId === activeTabId);
   
-  // Function to handle tab removal
   const handleRemoveTab = (tabId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     removeWorkspaceTab(tabId);
@@ -115,7 +119,7 @@ export function WidgetWorkspace() {
       <Tabs 
         value={activeTabId} 
         onValueChange={setActiveTab}
-        className="w-full"
+        className="w-full flex flex-col h-full"
       >
         <div className="flex items-center border-b px-4">
           <TabsList className="h-10 flex-grow">
@@ -152,7 +156,7 @@ export function WidgetWorkspace() {
           <TabsContent 
             key={tab.id} 
             value={tab.id}
-            className="flex-1 h-full"
+            className="flex-1 relative mt-4 overflow-hidden"
           >
             <Droppable droppableId="workspace" direction="vertical" type="WIDGET">
               {(provided, snapshot) => (
@@ -165,7 +169,7 @@ export function WidgetWorkspace() {
                   }}
                   {...provided.droppableProps}
                   className={`
-                    h-full p-4 overflow-auto ${isMobile ? "grid-cols-1" : "grid-cols-2"} gap-4 auto-rows-min
+                    h-full p-4 overflow-auto relative
                     ${snapshot.isDraggingOver ? "bg-primary/5 border-2 border-dashed border-primary/30" : ""}
                   `}
                   style={{ display: 'block' }}
@@ -173,7 +177,7 @@ export function WidgetWorkspace() {
                 >
                   {tab.id === activeTabId && tabWidgets.map((widget, index) => {
                     const WidgetComponent = widgetComponents[widget.type];
-                    const optimalY = findOptimalPosition();
+                    const optimalPosition = findOptimalPosition();
                     
                     return (
                       <Draggable 
@@ -186,11 +190,15 @@ export function WidgetWorkspace() {
                           <div
                             ref={provided.innerRef}
                             {...provided.draggableProps}
-                            className={`min-h-[300px] w-full ${snapshot.isDragging ? "opacity-70" : ""}`}
+                            className={`
+                              min-h-[300px] w-[calc(50% - 16px)] 
+                              ${snapshot.isDragging ? "opacity-70" : ""}
+                            `}
                             style={{
                               ...provided.draggableProps.style,
                               position: 'absolute',
-                              top: optimalY ? `${optimalY}px` : '16px',
+                              top: optimalPosition?.y ?? '16px',
+                              left: optimalPosition?.x ?? '0',
                               transition: 'all 0.3s ease',
                             }}
                             data-widget-id={widget.id}
