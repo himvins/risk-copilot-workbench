@@ -73,7 +73,7 @@ export function RegulatoryCapitalWidget({ widget, onClose }: WidgetComponentProp
                         <Progress 
                           value={(ratio.value / (ratio.target * 1.5)) * 100} 
                           className="h-2"
-                          indicatorClassName={`${getBarColor(ratio.value, ratio.target)}`}
+                          indicatorClassName={getBarColor(ratio.value, ratio.target)}
                         />
                       </div>
                       <div className="ml-2 text-xs text-muted-foreground">
