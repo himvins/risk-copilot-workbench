@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, ReactNode } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { WidgetType, Widget, Message, MessageAction, WidgetCustomization, WorkspaceTab } from "@/types";
@@ -10,6 +9,7 @@ interface WorkspaceContextType {
   isProcessing: boolean;
   workspaceTabs: WorkspaceTab[];
   activeTabId: string;
+  selectedWidgetId: string | null;
   addWidgetByType: (widgetType: WidgetType) => void;
   removeWidget: (widgetId: string) => void;
   removeWidgetByType: (widgetType: WidgetType) => void;
@@ -21,6 +21,7 @@ interface WorkspaceContextType {
   setActiveTab: (tabId: string) => void;
   removeWorkspaceTab: (tabId: string) => void;
   renameWorkspaceTab: (tabId: string, name: string) => void;
+  selectWidget: (widgetId: string | null) => void;
 }
 
 const WorkspaceContext = createContext<WorkspaceContextType | undefined>(undefined);
@@ -30,6 +31,7 @@ export function WorkspaceProvider({ children }: { children: (context: WorkspaceC
   const [messages, setMessages] = useState<Message[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [widgetCustomizations, setWidgetCustomizations] = useState<Record<string, WidgetCustomization>>({});
+  const [selectedWidgetId, setSelectedWidgetId] = useState<string | null>(null);
   
   // Initialize with a default tab
   const defaultTabId = uuidv4();
@@ -51,7 +53,6 @@ export function WorkspaceProvider({ children }: { children: (context: WorkspaceC
     ]);
   };
 
-  // Helper function to generate widget titles based on type
   const getWidgetTitle = (widgetType: WidgetType): string => {
     switch (widgetType) {
       case "risk-exposure":
@@ -102,8 +103,7 @@ export function WorkspaceProvider({ children }: { children: (context: WorkspaceC
       })
     );
   };
-  
-  // Function to reorder widgets
+
   const reorderWidgets = (fromIndex: number, toIndex: number) => {
     setPlacedWidgets(prevWidgets => {
       const result = Array.from(prevWidgets);
@@ -113,23 +113,18 @@ export function WorkspaceProvider({ children }: { children: (context: WorkspaceC
     });
   };
 
-  // Function to get widget customizations
   const getWidgetCustomization = (widgetId: string): WidgetCustomization | undefined => {
     return widgetCustomizations[widgetId];
   };
 
-  // Tab management functions
   const addWorkspaceTab = () => {
     const newTabId = uuidv4();
     setWorkspaceTabs(prev => {
-      // Set all tabs to inactive
       const updatedTabs = prev.map(tab => ({ ...tab, isActive: false }));
-      // Add new active tab
       return [...updatedTabs, { id: newTabId, name: `Tab ${updatedTabs.length + 1}`, isActive: true }];
     });
     setActiveTabId(newTabId);
 
-    // Notify user
     toast({
       title: "New workspace tab created",
       description: "You can now add widgets to this tab"
@@ -149,7 +144,6 @@ export function WorkspaceProvider({ children }: { children: (context: WorkspaceC
   };
 
   const removeWorkspaceTab = (tabId: string) => {
-    // Don't remove if it's the last tab
     if (workspaceTabs.length <= 1) {
       toast({
         title: "Cannot remove tab",
@@ -159,11 +153,9 @@ export function WorkspaceProvider({ children }: { children: (context: WorkspaceC
       return;
     }
 
-    // Remove the tab
     setWorkspaceTabs(prev => {
       const updatedTabs = prev.filter(tab => tab.id !== tabId);
       
-      // If the active tab was removed, activate the first tab
       if (activeTabId === tabId && updatedTabs.length > 0) {
         updatedTabs[0].isActive = true;
         setActiveTabId(updatedTabs[0].id);
@@ -172,10 +164,8 @@ export function WorkspaceProvider({ children }: { children: (context: WorkspaceC
       return updatedTabs;
     });
 
-    // Remove widgets associated with this tab
     setPlacedWidgets(prev => prev.filter(widget => widget.tabId !== tabId));
 
-    // Notify user
     toast({
       title: "Workspace tab removed",
       description: "All widgets in this tab have been removed"
@@ -190,11 +180,27 @@ export function WorkspaceProvider({ children }: { children: (context: WorkspaceC
     );
   };
 
-  // Function to handle sending messages
+  const selectWidget = (widgetId: string | null) => {
+    setSelectedWidgetId(widgetId);
+    
+    if (widgetId) {
+      const selectedWidget = placedWidgets.find(w => w.id === widgetId);
+      if (selectedWidget) {
+        const systemMessage: Message = {
+          id: uuidv4(),
+          content: `You've selected the "${selectedWidget.title}" widget. You can ask questions about it or request modifications.`,
+          type: "system",
+          timestamp: new Date(),
+        };
+        
+        setMessages(prev => [...prev, systemMessage]);
+      }
+    }
+  };
+
   const sendMessage = (content: string) => {
     if (!content.trim()) return;
     
-    // Add user message
     const userMessage: Message = {
       id: uuidv4(),
       content: content,
@@ -205,20 +211,46 @@ export function WorkspaceProvider({ children }: { children: (context: WorkspaceC
     setMessages(prev => [...prev, userMessage]);
     setIsProcessing(true);
     
-    // Simulate AI response (in real app, this would call an API)
     setTimeout(() => {
+      let responseContent = `I've received your message: "${content}". How else can I assist you?`;
+      let responseActions: MessageAction[] = [
+        {
+          id: uuidv4(),
+          label: "Add risk widget",
+          action: () => addWidgetByType("risk-exposure")
+        }
+      ];
+      
+      if (selectedWidgetId) {
+        const selectedWidget = placedWidgets.find(w => w.id === selectedWidgetId);
+        if (selectedWidget) {
+          responseContent = `Regarding the "${selectedWidget.title}" widget: I'll help you with "${content}". What specific changes would you like to make?`;
+          responseActions = [
+            {
+              id: uuidv4(),
+              label: `Customize ${selectedWidget.title}`,
+              action: () => {
+                toast({
+                  title: "Customization requested",
+                  description: `Customization for ${selectedWidget.title} would happen here`
+                });
+              }
+            },
+            {
+              id: uuidv4(),
+              label: "Deselect widget",
+              action: () => selectWidget(null)
+            }
+          ];
+        }
+      }
+      
       const aiMessage: Message = {
         id: uuidv4(),
-        content: `I've received your message: "${content}". How else can I assist you?`,
+        content: responseContent,
         type: "ai",
         timestamp: new Date(),
-        actions: [
-          {
-            id: uuidv4(),
-            label: "Add risk widget",
-            action: () => addWidgetByType("risk-exposure")
-          }
-        ]
+        actions: responseActions
       };
       
       setMessages(prev => [...prev, aiMessage]);
@@ -226,11 +258,8 @@ export function WorkspaceProvider({ children }: { children: (context: WorkspaceC
     }, 1000);
   };
 
-  // Add toast import
   const toast = (props: any) => {
-    // Forward to useToast implementation
     if (typeof window !== 'undefined' && window?.document) {
-      // We're in a browser environment
       const { toast: showToast } = require('@/hooks/use-toast');
       showToast(props);
     }
@@ -242,6 +271,7 @@ export function WorkspaceProvider({ children }: { children: (context: WorkspaceC
     isProcessing,
     workspaceTabs,
     activeTabId,
+    selectedWidgetId,
     addWidgetByType,
     removeWidget,
     removeWidgetByType,
@@ -252,7 +282,8 @@ export function WorkspaceProvider({ children }: { children: (context: WorkspaceC
     addWorkspaceTab,
     setActiveTab,
     removeWorkspaceTab,
-    renameWorkspaceTab
+    renameWorkspaceTab,
+    selectWidget
   };
 
   return (

@@ -23,7 +23,7 @@ export const ResizableWidget: React.FC<ResizableWidgetProps> = ({
   const [dimensions, setDimensions] = useState({ height: 300, width: '100%' });
   const widgetRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
-  const { placedWidgets, activeTabId } = useWorkspace();
+  const { placedWidgets, activeTabId, selectWidget, selectedWidgetId } = useWorkspace();
   
   // For resize tracking
   const startResizePosition = useRef<{ x: number, y: number } | null>(null);
@@ -75,6 +75,15 @@ export const ResizableWidget: React.FC<ResizableWidgetProps> = ({
     document.removeEventListener('mouseup', handleResizeEnd);
   };
 
+  // Handle widget selection
+  const handleWidgetClick = (e: React.MouseEvent) => {
+    // Don't select if clicking on control buttons
+    if ((e.target as Element).closest('.widget-controls')) return;
+    
+    // Toggle selection state
+    selectWidget(selectedWidgetId === id ? null : id);
+  };
+
   // Return custom dimensions for expanded state
   const getWidgetStyle = () => {
     if (isExpanded) {
@@ -120,21 +129,39 @@ export const ResizableWidget: React.FC<ResizableWidgetProps> = ({
       }
     }
 
+    // Select the widget
+    selectWidget(widgetId);
+
     toast({
       title: "Switched widget",
       description: "Navigated to another widget"
     });
   };
 
+  // Find the current widget's title
+  const currentWidget = placedWidgets.find(widget => widget.id === id);
+  const isSelected = selectedWidgetId === id;
+
   return (
     <div 
       ref={widgetRef}
-      className={`relative bg-card rounded-lg shadow-lg border border-border ${className}`}
+      className={cn(
+        `relative bg-card rounded-lg shadow-lg border transition-all duration-200`,
+        isSelected ? 'border-primary' : 'border-border',
+        className
+      )}
       style={getWidgetStyle()}
       data-widget-id={id}
       data-expanded={isExpanded ? "true" : "false"}
+      data-selected={isSelected ? "true" : "false"}
+      onClick={handleWidgetClick}
     >
-      <div className="absolute top-2 right-2 flex items-center space-x-1 z-20">
+      {/* Selection indicator */}
+      {isSelected && (
+        <div className="absolute inset-0 border-2 border-primary rounded-lg pointer-events-none z-10"></div>
+      )}
+      
+      <div className="absolute top-2 right-2 flex items-center space-x-1 z-20 widget-controls">
         <button
           onClick={handleResize}
           className="p-1 hover:bg-muted rounded-md transition-colors"
@@ -163,9 +190,17 @@ export const ResizableWidget: React.FC<ResizableWidgetProps> = ({
       </div>
       
       {/* Move handle */}
-      <div className="absolute top-2 left-2 p-1 hover:bg-muted rounded-md transition-colors z-20" aria-label="Move widget">
+      <div className="absolute top-2 left-2 p-1 hover:bg-muted rounded-md transition-colors z-20 widget-controls" aria-label="Move widget">
         <Move size={16} className="text-muted-foreground" />
       </div>
+      
+      {/* Widget title */}
+      {currentWidget && (
+        <div className="absolute top-2 left-8 text-sm font-medium">
+          {currentWidget.title}
+          {isSelected && <span className="ml-2 text-xs text-primary">(Selected)</span>}
+        </div>
+      )}
       
       {/* Widget content */}
       <div className="p-4 pt-10 h-full overflow-auto">
@@ -198,4 +233,3 @@ export const ResizableWidget: React.FC<ResizableWidgetProps> = ({
     </div>
   );
 };
-
