@@ -3,6 +3,8 @@ import React, { useState, useRef } from 'react';
 import { X, Maximize2, Minimize2, Move } from 'lucide-react';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 import { useToast } from "@/hooks/use-toast";
+import { useWorkspace } from "@/context/WorkspaceContext";
+import { cn } from "@/lib/utils";
 
 interface ResizableWidgetProps {
   children: React.ReactNode;
@@ -21,6 +23,7 @@ export const ResizableWidget: React.FC<ResizableWidgetProps> = ({
   const [dimensions, setDimensions] = useState({ height: 300, width: '100%' });
   const widgetRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+  const { placedWidgets, activeTabId } = useWorkspace();
   
   // For resize tracking
   const startResizePosition = useRef<{ x: number, y: number } | null>(null);
@@ -91,18 +94,52 @@ export const ResizableWidget: React.FC<ResizableWidgetProps> = ({
     };
   };
 
+  // Get widgets in the current tab to show in the navigation tray
+  const tabWidgets = placedWidgets.filter(widget => widget.tabId === activeTabId);
+
+  // Switch to another widget in expanded mode
+  const switchToWidget = (widgetId: string) => {
+    if (widgetId === id) return; // Skip if it's the current widget
+
+    // Find all expanded widgets and collapse them
+    const expandedWidgets = document.querySelectorAll('[data-expanded="true"]');
+    expandedWidgets.forEach((element) => {
+      const widgetElement = element as HTMLElement;
+      const closeButton = widgetElement.querySelector('[data-action="toggle-expand"]') as HTMLButtonElement;
+      if (closeButton && widgetElement.dataset.widgetId !== widgetId) {
+        closeButton.click();
+      }
+    });
+
+    // Find the target widget and expand it
+    const targetWidget = document.querySelector(`[data-widget-id="${widgetId}"]`) as HTMLElement;
+    if (targetWidget) {
+      const expandButton = targetWidget.querySelector('[data-action="toggle-expand"]') as HTMLButtonElement;
+      if (expandButton) {
+        expandButton.click();
+      }
+    }
+
+    toast({
+      title: "Switched widget",
+      description: "Navigated to another widget"
+    });
+  };
+
   return (
     <div 
       ref={widgetRef}
       className={`relative bg-card rounded-lg shadow-lg border border-border ${className}`}
       style={getWidgetStyle()}
       data-widget-id={id}
+      data-expanded={isExpanded ? "true" : "false"}
     >
       <div className="absolute top-2 right-2 flex items-center space-x-1 z-20">
         <button
           onClick={handleResize}
           className="p-1 hover:bg-muted rounded-md transition-colors"
           aria-label={isExpanded ? "Minimize widget" : "Maximize widget"}
+          data-action="toggle-expand"
         >
           {isExpanded ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
         </button>
@@ -130,9 +167,35 @@ export const ResizableWidget: React.FC<ResizableWidgetProps> = ({
         <Move size={16} className="text-muted-foreground" />
       </div>
       
+      {/* Widget content */}
       <div className="p-4 pt-10 h-full overflow-auto">
         {children}
       </div>
+
+      {/* Widget navigation tray - only shown when expanded */}
+      {isExpanded && tabWidgets.length > 1 && (
+        <div className="absolute bottom-0 left-0 right-0 bg-background/90 backdrop-blur-sm border-t border-border p-2 z-30">
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 px-2">
+            <span className="text-xs font-medium text-muted-foreground">Quick Switch:</span>
+            {tabWidgets.map(widget => (
+              <button
+                key={widget.id}
+                onClick={() => switchToWidget(widget.id)}
+                className={cn(
+                  "flex items-center gap-1 px-3 py-1.5 text-xs rounded-md whitespace-nowrap transition-colors",
+                  widget.id === id 
+                    ? "bg-primary text-primary-foreground" 
+                    : "hover:bg-secondary"
+                )}
+                disabled={widget.id === id}
+              >
+                <span>{widget.title}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
+

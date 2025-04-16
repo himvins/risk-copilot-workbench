@@ -1,5 +1,5 @@
 
-import React, { useState, useRef } from "react";
+import React, { useState } from "react";
 import { useWorkspace } from "@/context/WorkspaceContext";
 import { Droppable, Draggable } from "@hello-pangea/dnd";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -136,7 +136,7 @@ export function WidgetWorkspace() {
                     h-full p-4 overflow-auto relative
                     ${snapshot.isDraggingOver ? "bg-primary/5 border-2 border-dashed border-primary/30" : ""}
                   `}
-                  style={{ display: 'block' }}
+                  style={{ display: 'block', position: 'relative' }}
                   data-droppable="true"
                 >
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -191,4 +191,3 @@ export function WidgetWorkspace() {
     </div>
   );
 }
-
