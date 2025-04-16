@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from "react";
 import { useWorkspace } from "@/context/WorkspaceContext";
 import { Droppable, Draggable } from "@hello-pangea/dnd";
@@ -45,39 +46,7 @@ export function WidgetWorkspace() {
   const isMobile = useIsMobile();
   const { toast } = useToast();
   const [isDragging, setIsDragging] = useState(false);
-  const workspaceRef = useRef<HTMLDivElement>(null);
   
-  const findOptimalPosition = () => {
-    if (!workspaceRef.current) return;
-
-    const widgets = workspaceRef.current.querySelectorAll('[data-widget-id]');
-    const occupiedSpaces: Array<DOMRect> = [];
-
-    widgets.forEach((widget) => {
-      const rect = widget.getBoundingClientRect();
-      occupiedSpaces.push(rect);
-    });
-
-    const columnWidth = workspaceRef.current.clientWidth / 2;
-    const columnSpaces: { left: number[], right: number[] } = { left: [], right: [] };
-    
-    occupiedSpaces.forEach((space) => {
-      if (space.left < columnWidth) {
-        columnSpaces.left.push(space.bottom + 16);
-      } else {
-        columnSpaces.right.push(space.bottom + 16);
-      }
-    });
-
-    const leftY = columnSpaces.left.length ? Math.max(...columnSpaces.left) : 16;
-    const rightY = columnSpaces.right.length ? Math.max(...columnSpaces.right) : 16;
-
-    return {
-      x: leftY <= rightY ? 0 : columnWidth,
-      y: leftY <= rightY ? leftY : rightY
-    };
-  };
-
   const handleWidgetRemove = (id: string) => {
     removeWidget(id);
     toast({
@@ -161,12 +130,7 @@ export function WidgetWorkspace() {
             <Droppable droppableId="workspace" direction="vertical" type="WIDGET">
               {(provided, snapshot) => (
                 <div
-                  ref={(el) => {
-                    provided.innerRef(el);
-                    if (workspaceRef.current !== el && tab.id === activeTabId) {
-                      workspaceRef.current = el;
-                    }
-                  }}
+                  ref={provided.innerRef}
                   {...provided.droppableProps}
                   className={`
                     h-full p-4 overflow-auto relative
@@ -175,45 +139,40 @@ export function WidgetWorkspace() {
                   style={{ display: 'block' }}
                   data-droppable="true"
                 >
-                  {tab.id === activeTabId && tabWidgets.map((widget, index) => {
-                    const WidgetComponent = widgetComponents[widget.type];
-                    const optimalPosition = findOptimalPosition();
-                    
-                    return (
-                      <Draggable 
-                        key={widget.id} 
-                        draggableId={`placed-${widget.id}`} 
-                        index={index}
-                        disableInteractiveElementBlocking={true}
-                      >
-                        {(provided, snapshot) => (
-                          <div
-                            ref={provided.innerRef}
-                            {...provided.draggableProps}
-                            className={`
-                              min-h-[300px] w-[calc(50% - 16px)] 
-                              ${snapshot.isDragging ? "opacity-70" : ""}
-                            `}
-                            style={{
-                              ...provided.draggableProps.style,
-                              position: 'absolute',
-                              top: optimalPosition?.y ?? '16px',
-                              left: optimalPosition?.x ?? '0',
-                              transition: 'all 0.3s ease',
-                            }}
-                            data-widget-id={widget.id}
-                          >
-                            <ResizableWidget 
-                              id={widget.id}
-                              onClose={() => handleWidgetRemove(widget.id)}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {tab.id === activeTabId && tabWidgets.map((widget, index) => {
+                      const WidgetComponent = widgetComponents[widget.type];
+                      
+                      return (
+                        <Draggable 
+                          key={widget.id} 
+                          draggableId={`placed-${widget.id}`} 
+                          index={index}
+                          disableInteractiveElementBlocking={true}
+                        >
+                          {(provided, snapshot) => (
+                            <div
+                              ref={provided.innerRef}
+                              {...provided.draggableProps}
+                              {...provided.dragHandleProps}
+                              className={`
+                                widget-container min-h-[300px]
+                                ${snapshot.isDragging ? "opacity-70" : ""}
+                              `}
                             >
-                              <WidgetComponent widget={widget} />
-                            </ResizableWidget>
-                          </div>
-                        )}
-                      </Draggable>
-                    );
-                  })}
+                              <ResizableWidget 
+                                id={widget.id}
+                                onClose={() => handleWidgetRemove(widget.id)}
+                              >
+                                <WidgetComponent widget={widget} />
+                              </ResizableWidget>
+                            </div>
+                          )}
+                        </Draggable>
+                      );
+                    })}
+                  </div>
+                  
                   {tabWidgets.length === 0 && (
                     <div className="col-span-full h-full flex flex-col items-center justify-center text-muted-foreground">
                       <p className="text-sm mb-2">Drag widgets here to build your workspace</p>
@@ -232,3 +191,4 @@ export function WidgetWorkspace() {
     </div>
   );
 }
+

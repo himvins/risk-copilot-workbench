@@ -85,8 +85,8 @@ export const ResizableWidget: React.FC<ResizableWidgetProps> = ({
     }
     
     return {
-      height: `${dimensions.height}px`,
-      width: dimensions.width,
+      height: dimensions.height,
+      width: '100%',
       zIndex: 0
     };
   };
@@ -126,7 +126,7 @@ export const ResizableWidget: React.FC<ResizableWidgetProps> = ({
       </div>
       
       {/* Move handle */}
-      <div className="absolute top-2 left-2 p-1 hover:bg-muted rounded-md transition-colors z-20 cursor-move" aria-label="Move widget">
+      <div className="absolute top-2 left-2 p-1 hover:bg-muted rounded-md transition-colors z-20" aria-label="Move widget">
         <Move size={16} className="text-muted-foreground" />
       </div>
       
