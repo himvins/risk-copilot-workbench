@@ -1,13 +1,15 @@
 
 import React, { createContext, useContext, useState, ReactNode } from "react";
 import { v4 as uuidv4 } from "uuid";
-import { WidgetType, Widget, Message, MessageAction, WidgetCustomization } from "@/types";
+import { WidgetType, Widget, Message, MessageAction, WidgetCustomization, WorkspaceTab } from "@/types";
 
 // Extended context type to include messaging and reordering capabilities
 interface WorkspaceContextType {
   placedWidgets: Widget[];
   messages: Message[];
   isProcessing: boolean;
+  workspaceTabs: WorkspaceTab[];
+  activeTabId: string;
   addWidgetByType: (widgetType: WidgetType) => void;
   removeWidget: (widgetId: string) => void;
   removeWidgetByType: (widgetType: WidgetType) => void;
@@ -15,6 +17,10 @@ interface WorkspaceContextType {
   reorderWidgets: (fromIndex: number, toIndex: number) => void;
   sendMessage: (content: string) => void;
   getWidgetCustomization: (widgetId: string) => WidgetCustomization | undefined;
+  addWorkspaceTab: () => void;
+  setActiveTab: (tabId: string) => void;
+  removeWorkspaceTab: (tabId: string) => void;
+  renameWorkspaceTab: (tabId: string, name: string) => void;
 }
 
 const WorkspaceContext = createContext<WorkspaceContextType | undefined>(undefined);
@@ -24,6 +30,13 @@ export function WorkspaceProvider({ children }: { children: (context: WorkspaceC
   const [messages, setMessages] = useState<Message[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [widgetCustomizations, setWidgetCustomizations] = useState<Record<string, WidgetCustomization>>({});
+  
+  // Initialize with a default tab
+  const defaultTabId = uuidv4();
+  const [workspaceTabs, setWorkspaceTabs] = useState<WorkspaceTab[]>([
+    { id: defaultTabId, name: "Overview", isActive: true }
+  ]);
+  const [activeTabId, setActiveTabId] = useState(defaultTabId);
 
   const addWidgetByType = (widgetType: WidgetType) => {
     setPlacedWidgets((prev) => [
@@ -32,7 +45,8 @@ export function WorkspaceProvider({ children }: { children: (context: WorkspaceC
         id: uuidv4(),
         type: widgetType,
         title: getWidgetTitle(widgetType),
-        columns: []
+        columns: [],
+        tabId: activeTabId // Associate widget with current active tab
       }
     ]);
   };
@@ -52,6 +66,16 @@ export function WorkspaceProvider({ children }: { children: (context: WorkspaceC
         return "Transaction Volume";
       case "risk-alerts":
         return "Risk Alerts";
+      case "credit-risk-metrics":
+        return "Credit Risk Metrics";
+      case "liquidity-coverage-ratio":
+        return "Liquidity Coverage";
+      case "regulatory-capital":
+        return "Regulatory Capital";
+      case "stress-test-scenarios":
+        return "Stress Testing";
+      case "operational-risk-events":
+        return "Operational Risk";
       default:
         return "Widget";
     }
@@ -94,6 +118,78 @@ export function WorkspaceProvider({ children }: { children: (context: WorkspaceC
     return widgetCustomizations[widgetId];
   };
 
+  // Tab management functions
+  const addWorkspaceTab = () => {
+    const newTabId = uuidv4();
+    setWorkspaceTabs(prev => {
+      // Set all tabs to inactive
+      const updatedTabs = prev.map(tab => ({ ...tab, isActive: false }));
+      // Add new active tab
+      return [...updatedTabs, { id: newTabId, name: `Tab ${updatedTabs.length + 1}`, isActive: true }];
+    });
+    setActiveTabId(newTabId);
+
+    // Notify user
+    toast({
+      title: "New workspace tab created",
+      description: "You can now add widgets to this tab"
+    });
+  };
+
+  const setActiveTab = (tabId: string) => {
+    if (tabId === activeTabId) return;
+
+    setWorkspaceTabs(prev => 
+      prev.map(tab => ({
+        ...tab,
+        isActive: tab.id === tabId
+      }))
+    );
+    setActiveTabId(tabId);
+  };
+
+  const removeWorkspaceTab = (tabId: string) => {
+    // Don't remove if it's the last tab
+    if (workspaceTabs.length <= 1) {
+      toast({
+        title: "Cannot remove tab",
+        description: "At least one workspace tab must remain",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Remove the tab
+    setWorkspaceTabs(prev => {
+      const updatedTabs = prev.filter(tab => tab.id !== tabId);
+      
+      // If the active tab was removed, activate the first tab
+      if (activeTabId === tabId && updatedTabs.length > 0) {
+        updatedTabs[0].isActive = true;
+        setActiveTabId(updatedTabs[0].id);
+      }
+      
+      return updatedTabs;
+    });
+
+    // Remove widgets associated with this tab
+    setPlacedWidgets(prev => prev.filter(widget => widget.tabId !== tabId));
+
+    // Notify user
+    toast({
+      title: "Workspace tab removed",
+      description: "All widgets in this tab have been removed"
+    });
+  };
+
+  const renameWorkspaceTab = (tabId: string, name: string) => {
+    setWorkspaceTabs(prev => 
+      prev.map(tab => 
+        tab.id === tabId ? { ...tab, name: name || `Tab ${Math.random().toString(36).substr(2, 5)}` } : tab
+      )
+    );
+  };
+
   // Function to handle sending messages
   const sendMessage = (content: string) => {
     if (!content.trim()) return;
@@ -130,17 +226,33 @@ export function WorkspaceProvider({ children }: { children: (context: WorkspaceC
     }, 1000);
   };
 
+  // Add toast import
+  const toast = (props: any) => {
+    // Forward to useToast implementation
+    if (typeof window !== 'undefined' && window?.document) {
+      // We're in a browser environment
+      const { toast: showToast } = require('@/hooks/use-toast');
+      showToast(props);
+    }
+  };
+
   const value: WorkspaceContextType = {
     placedWidgets,
     messages,
     isProcessing,
+    workspaceTabs,
+    activeTabId,
     addWidgetByType,
     removeWidget,
     removeWidgetByType,
     addColumnToWidget,
     reorderWidgets,
     sendMessage,
-    getWidgetCustomization
+    getWidgetCustomization,
+    addWorkspaceTab,
+    setActiveTab,
+    removeWorkspaceTab,
+    renameWorkspaceTab
   };
 
   return (

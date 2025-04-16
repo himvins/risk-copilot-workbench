@@ -1,4 +1,3 @@
-
 import { ReactNode } from "react";
 
 export interface Widget {
@@ -12,7 +11,8 @@ export interface Widget {
     y: number;
   };
   isPlaced?: boolean;
-  columns: string[];  // Adding columns as a required property
+  columns: string[];
+  tabId?: string;
 }
 
 export type WidgetType = 
@@ -21,7 +21,12 @@ export type WidgetType =
   | "market-volatility"
   | "portfolio-heatmap"
   | "transaction-volume"
-  | "risk-alerts";
+  | "risk-alerts"
+  | "credit-risk-metrics"
+  | "liquidity-coverage-ratio"
+  | "regulatory-capital"
+  | "stress-test-scenarios"
+  | "operational-risk-events";
 
 export interface Message {
   id: string;
@@ -50,4 +55,10 @@ export interface WidgetCustomization {
     type: string;
     name: string;
   }[];
+}
+
+export interface WorkspaceTab {
+  id: string;
+  name: string;
+  isActive?: boolean;
 }

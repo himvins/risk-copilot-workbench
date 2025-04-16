@@ -1,7 +1,11 @@
+
 import React from "react";
 import { useWorkspace } from "@/context/WorkspaceContext";
 import { Droppable, Draggable } from "@hello-pangea/dnd";
-import { BarChart3, Activity, LineChart, AlertCircle, Scale, DollarSign } from "lucide-react";
+import { 
+  BarChart3, Activity, LineChart, AlertCircle, Scale, DollarSign,
+  CreditCard, Gauge, FileStack, TestTube, AlarmClock
+} from "lucide-react";
 import { WidgetType } from "@/types";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -53,19 +57,53 @@ const availableWidgets: WidgetTemplate[] = [
     title: "Transaction Volume",
     icon: <DollarSign size={18} className="text-widget-amber" />,
     description: "Monitor trading activity",
+  },
+  {
+    type: "credit-risk-metrics",
+    title: "Credit Risk Metrics",
+    icon: <CreditCard size={18} className="text-widget-red" />,
+    description: "Credit risk analysis and scores",
+  },
+  {
+    type: "liquidity-coverage-ratio",
+    title: "Liquidity Coverage",
+    icon: <Gauge size={18} className="text-widget-green" />,
+    description: "LCR and liquidity metrics",
+  },
+  {
+    type: "regulatory-capital",
+    title: "Regulatory Capital",
+    icon: <FileStack size={18} className="text-widget-accent" />,
+    description: "Capital adequacy ratios",
+  },
+  {
+    type: "stress-test-scenarios",
+    title: "Stress Testing",
+    icon: <TestTube size={18} className="text-widget-amber" />,
+    description: "Scenario analysis results",
+  },
+  {
+    type: "operational-risk-events",
+    title: "Operational Risk",
+    icon: <AlarmClock size={18} className="text-widget-red" />,
+    description: "Operational risk incidents",
   }
 ];
 
 export function WidgetGallery({ iconOnly = false, hidden = false }: WidgetGalleryProps) {
-  const { placedWidgets, addWidgetByType } = useWorkspace();
+  const { placedWidgets, addWidgetByType, activeTabId } = useWorkspace();
   const isMobile = useIsMobile();
   
   if (hidden) {
     return null;
   }
   
-  // Filter out widgets that are already placed on the workspace
-  const placedWidgetTypes = new Set(placedWidgets.map(w => w.type));
+  // Filter out widgets that are already placed on the current active tab
+  const placedWidgetTypesInCurrentTab = new Set(
+    placedWidgets
+      .filter(w => w.tabId === activeTabId)
+      .map(w => w.type)
+  );
   
   return (
     <div className="h-full bg-secondary/30 p-3 overflow-y-auto">
@@ -86,7 +124,7 @@ export function WidgetGallery({ iconOnly = false, hidden = false }: WidgetGaller
             {...provided.droppableProps}
           >
             {availableWidgets.map((widget, index) => {
-              const isPlaced = placedWidgetTypes.has(widget.type);
+              const isPlaced = placedWidgetTypesInCurrentTab.has(widget.type);
               
               return (
                 <Draggable
