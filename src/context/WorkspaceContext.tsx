@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, ReactNode } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { WidgetType, Widget, Message, MessageAction, WidgetCustomization, WorkspaceTab } from "@/types";
+import { useToast as useToastHook } from "@/hooks/use-toast";
 
 interface WorkspaceContextType {
   placedWidgets: Widget[];
@@ -31,6 +32,7 @@ export function WorkspaceProvider({ children }: { children: (context: WorkspaceC
   const [isProcessing, setIsProcessing] = useState(false);
   const [widgetCustomizations, setWidgetCustomizations] = useState<Record<string, WidgetCustomization>>({});
   const [selectedWidgetId, setSelectedWidgetId] = useState<string | null>(null);
+  const { toast } = useToastHook();
   
   const defaultTabId = uuidv4();
   const [workspaceTabs, setWorkspaceTabs] = useState<WorkspaceTab[]>([
@@ -261,13 +263,6 @@ export function WorkspaceProvider({ children }: { children: (context: WorkspaceC
       setMessages(prev => [...prev, aiMessage]);
       setIsProcessing(false);
     }, 1000);
-  };
-
-  const toast = (props: any) => {
-    if (typeof window !== 'undefined' && window?.document) {
-      const { toast: showToast } = require('@/hooks/use-toast');
-      showToast(props);
-    }
   };
 
   const value: WorkspaceContextType = {

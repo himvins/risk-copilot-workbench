@@ -1,5 +1,4 @@
-
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useWorkspace } from "@/context/WorkspaceContext";
 import { Droppable, Draggable } from "@hello-pangea/dnd";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -43,51 +42,97 @@ interface EditableTabProps {
 const EditableTab = ({ tab, onRename, onRemove }: EditableTabProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(tab.name);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const formRef = useRef<HTMLFormElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  
+  useEffect(() => {
+    if (isEditing) {
+      const handleClickOutside = (event: MouseEvent) => {
+        if (formRef.current && !formRef.current.contains(event.target as Node)) {
+          saveChanges();
+        }
+      };
+      
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }
+  }, [isEditing]);
+  
+  useEffect(() => {
+    if (isEditing && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [isEditing]);
+  
+  const saveChanges = () => {
     if (editValue.trim()) {
       onRename(tab.id, editValue.trim());
-      setIsEditing(false);
+    } else {
+      setEditValue(tab.name);
     }
+    setIsEditing(false);
   };
-
-  const handleCancel = (e?: React.MouseEvent) => {
+  
+  const cancelEdit = (e?: React.MouseEvent) => {
     if (e) {
       e.preventDefault();
       e.stopPropagation();
     }
-    setEditValue(tab.name); // Reset to original name
+    setEditValue(tab.name);
     setIsEditing(false);
   };
-
+  
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    e.stopPropagation();
+    
     if (e.key === "Escape") {
-      handleCancel();
+      cancelEdit();
     } else if (e.key === "Enter") {
-      handleSubmit(e);
+      e.preventDefault();
+      saveChanges();
     }
   };
-
-  const handleClickOutside = (e: React.FocusEvent) => {
-    handleSubmit(e);
+  
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    saveChanges();
+  };
+  
+  const startEditing = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsEditing(true);
+  };
+  
+  const handleRemove = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onRemove(tab.id, e);
   };
 
   if (isEditing) {
     return (
-      <form onSubmit={handleSubmit} onClick={(e) => e.stopPropagation()} className="flex items-center gap-1 px-1">
+      <form 
+        ref={formRef}
+        onSubmit={handleSubmit}
+        onClick={(e) => e.stopPropagation()} 
+        className="flex items-center gap-1 px-1"
+      >
         <Input
+          ref={inputRef}
           value={editValue}
           onChange={(e) => setEditValue(e.target.value)}
-          className="h-6 w-24 text-xs"
-          autoFocus
-          onBlur={handleClickOutside}
           onKeyDown={handleKeyDown}
+          className="h-6 w-24 text-xs"
         />
         <span
-          onClick={(e) => handleCancel(e as React.MouseEvent)}
+          onClick={cancelEdit}
           className="p-0.5 hover:bg-secondary rounded-full cursor-pointer"
+          aria-label="Cancel editing"
         >
           <X size={14} />
         </span>
@@ -100,22 +145,16 @@ const EditableTab = ({ tab, onRename, onRemove }: EditableTabProps) => {
       <span>{tab.name}</span>
       <div className="flex gap-1">
         <span
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            setIsEditing(true);
-          }}
+          onClick={startEditing}
           className="p-0.5 hover:bg-secondary rounded-full cursor-pointer"
+          aria-label="Edit tab name"
         >
           <Pencil size={14} />
         </span>
         <span
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            onRemove(tab.id, e);
-          }}
+          onClick={handleRemove}
           className="p-0.5 hover:bg-secondary rounded-full cursor-pointer"
+          aria-label="Remove tab"
         >
           <X size={14} />
         </span>
