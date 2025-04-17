@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, FormEvent, useState } from "react";
 import { useWorkspace } from "@/context/WorkspaceContext";
 import { 
@@ -9,7 +8,7 @@ import {
   Plus, 
   X, 
   Columns, 
-  Highlight
+  Highlighter 
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -30,7 +29,6 @@ interface RiskCopilotProps {
   hidden?: boolean;
 }
 
-// Widget suggestions for "Add widget" action
 const widgetOptions: {id: WidgetType, label: string}[] = [
   { id: "risk-exposure", label: "Risk Exposure" },
   { id: "counterparty-analysis", label: "Counterparty Analysis" },
@@ -81,7 +79,6 @@ export function RiskCopilot({ hidden = false }: RiskCopilotProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Get the selected widget
   const selectedWidget = selectedWidgetId 
     ? placedWidgets.find(widget => widget.id === selectedWidgetId) 
     : null;
@@ -128,8 +125,6 @@ export function RiskCopilot({ hidden = false }: RiskCopilotProps) {
   };
 
   const handleHighlightColumn = (column: string) => {
-    // This is a placeholder for column highlighting functionality
-    // In a real implementation, this would update the widget's state
     sendMessage(`Highlighted column "${column}" in the widget`);
     setActionMode(null);
   };
@@ -293,10 +288,8 @@ export function RiskCopilot({ hidden = false }: RiskCopilotProps) {
         )}
       </div>
 
-      {/* Action Panel */}
       {renderActionPanel()}
 
-      {/* Quick Actions */}
       {!actionMode && (
         <div className="p-4 border-b border-border">
           <div className="flex flex-wrap gap-2">
@@ -344,7 +337,7 @@ export function RiskCopilot({ hidden = false }: RiskCopilotProps) {
                     setSearchValue('');
                   }}
                 >
-                  <Highlight size={14} />
+                  <Highlighter size={14} />
                   <span>Highlight</span>
                 </Button>
               </>
@@ -353,7 +346,6 @@ export function RiskCopilot({ hidden = false }: RiskCopilotProps) {
         </div>
       )}
 
-      {/* Messages Container */}
       <ScrollArea className="flex-1">
         <div className="p-4 space-y-4">
           {messages && messages.length > 0 ? (
@@ -440,7 +432,6 @@ export function RiskCopilot({ hidden = false }: RiskCopilotProps) {
         </div>
       </ScrollArea>
 
-      {/* Input Area */}
       <form
         onSubmit={handleSubmit}
         className="p-4 border-t border-border bg-card mt-auto"
@@ -480,5 +471,4 @@ export function RiskCopilot({ hidden = false }: RiskCopilotProps) {
   );
 }
 
-// Need to add cn utility import
 import { cn } from "@/lib/utils";
