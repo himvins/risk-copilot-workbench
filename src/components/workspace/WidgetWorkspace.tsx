@@ -1,9 +1,10 @@
-
 import React, { useState } from "react";
 import { useWorkspace } from "@/context/WorkspaceContext";
 import { Droppable, Draggable } from "@hello-pangea/dnd";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Plus, X, Pencil } from "lucide-react";
 import { RiskExposureWidget } from "./widgets/RiskExposureWidget";
 import { CounterpartyAnalysisWidget } from "./widgets/CounterpartyAnalysisWidget";
 import { MarketVolatilityWidget } from "./widgets/MarketVolatilityWidget";
@@ -16,20 +17,72 @@ import { OperationalRiskEventsWidget } from "./widgets/OperationalRiskEventsWidg
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ResizableWidget } from "./ResizableWidget";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, X } from "lucide-react";
 
 const widgetComponents: Record<string, React.FC<any>> = {
   "risk-exposure": RiskExposureWidget,
   "counterparty-analysis": CounterpartyAnalysisWidget,
   "market-volatility": MarketVolatilityWidget,
-  "portfolio-heatmap": MarketVolatilityWidget, // Reusing for demo
-  "transaction-volume": CounterpartyAnalysisWidget, // Reusing for demo
+  "portfolio-heatmap": MarketVolatilityWidget,
+  "transaction-volume": CounterpartyAnalysisWidget,
   "risk-alerts": RiskAlertsWidget,
   "credit-risk-metrics": CreditRiskMetricsWidget,
   "liquidity-coverage-ratio": LiquidityCoverageWidget,
   "regulatory-capital": RegulatoryCapitalWidget,
   "stress-test-scenarios": StressTestScenariosWidget,
   "operational-risk-events": OperationalRiskEventsWidget,
+};
+
+interface EditableTabProps {
+  tab: WorkspaceTab;
+  onRename: (id: string, name: string) => void;
+  onRemove: (id: string, e: React.MouseEvent) => void;
+}
+
+const EditableTab = ({ tab, onRename, onRemove }: EditableTabProps) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editValue, setEditValue] = useState(tab.name);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (editValue.trim()) {
+      onRename(tab.id, editValue.trim());
+      setIsEditing(false);
+    }
+  };
+
+  if (isEditing) {
+    return (
+      <form onSubmit={handleSubmit} className="flex items-center gap-1 px-1">
+        <Input
+          value={editValue}
+          onChange={(e) => setEditValue(e.target.value)}
+          className="h-6 w-24 text-xs"
+          autoFocus
+          onBlur={handleSubmit}
+        />
+      </form>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-2">
+      <span>{tab.name}</span>
+      <div className="flex gap-1">
+        <button
+          onClick={() => setIsEditing(true)}
+          className="p-0.5 hover:bg-secondary rounded-full"
+        >
+          <Pencil size={14} />
+        </button>
+        <button
+          onClick={(e) => onRemove(tab.id, e)}
+          className="p-0.5 hover:bg-secondary rounded-full"
+        >
+          <X size={14} />
+        </button>
+      </div>
+    </div>
+  );
 };
 
 export function WidgetWorkspace() {
@@ -41,7 +94,8 @@ export function WidgetWorkspace() {
     activeTabId, 
     setActiveTab,
     addWorkspaceTab,
-    removeWorkspaceTab
+    removeWorkspaceTab,
+    renameWorkspaceTab
   } = useWorkspace();
   const isMobile = useIsMobile();
   const { toast } = useToast();
@@ -98,15 +152,11 @@ export function WidgetWorkspace() {
                 value={tab.id}
                 className="flex items-center gap-2 px-4"
               >
-                <span>{tab.name}</span>
-                {workspaceTabs.length > 1 && (
-                  <button
-                    onClick={(e) => handleRemoveTab(tab.id, e)}
-                    className="p-0.5 hover:bg-secondary rounded-full"
-                  >
-                    <X size={14} />
-                  </button>
-                )}
+                <EditableTab
+                  tab={tab}
+                  onRename={renameWorkspaceTab}
+                  onRemove={handleRemoveTab}
+                />
               </TabsTrigger>
             ))}
           </TabsList>

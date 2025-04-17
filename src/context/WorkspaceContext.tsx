@@ -2,7 +2,6 @@ import React, { createContext, useContext, useState, ReactNode } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { WidgetType, Widget, Message, MessageAction, WidgetCustomization, WorkspaceTab } from "@/types";
 
-// Extended context type to include messaging and reordering capabilities
 interface WorkspaceContextType {
   placedWidgets: Widget[];
   messages: Message[];
@@ -33,7 +32,6 @@ export function WorkspaceProvider({ children }: { children: (context: WorkspaceC
   const [widgetCustomizations, setWidgetCustomizations] = useState<Record<string, WidgetCustomization>>({});
   const [selectedWidgetId, setSelectedWidgetId] = useState<string | null>(null);
   
-  // Initialize with a default tab
   const defaultTabId = uuidv4();
   const [workspaceTabs, setWorkspaceTabs] = useState<WorkspaceTab[]>([
     { id: defaultTabId, name: "Overview", isActive: true }
@@ -48,7 +46,7 @@ export function WorkspaceProvider({ children }: { children: (context: WorkspaceC
         type: widgetType,
         title: getWidgetTitle(widgetType),
         columns: [],
-        tabId: activeTabId // Associate widget with current active tab
+        tabId: activeTabId
       }
     ]);
   };
@@ -173,11 +171,18 @@ export function WorkspaceProvider({ children }: { children: (context: WorkspaceC
   };
 
   const renameWorkspaceTab = (tabId: string, name: string) => {
+    if (!name.trim()) return;
+    
     setWorkspaceTabs(prev => 
       prev.map(tab => 
-        tab.id === tabId ? { ...tab, name: name || `Tab ${Math.random().toString(36).substr(2, 5)}` } : tab
+        tab.id === tabId ? { ...tab, name } : tab
       )
     );
+
+    toast({
+      title: "Tab renamed",
+      description: `The tab has been renamed to "${name}"`
+    });
   };
 
   const selectWidget = (widgetId: string | null) => {

@@ -1,4 +1,3 @@
-
 import { ReactNode } from "react";
 
 export interface Widget {
@@ -62,4 +61,25 @@ export interface WorkspaceTab {
   id: string;
   name: string;
   isActive?: boolean;
+}
+
+export interface WorkspaceContextType {
+  placedWidgets: Widget[];
+  messages: Message[];
+  isProcessing: boolean;
+  workspaceTabs: WorkspaceTab[];
+  activeTabId: string;
+  selectedWidgetId: string | null;
+  addWidgetByType: (widgetType: WidgetType) => void;
+  removeWidget: (widgetId: string) => void;
+  removeWidgetByType: (widgetType: WidgetType) => void;
+  addColumnToWidget: (widgetId: string, columnId: string) => void;
+  reorderWidgets: (fromIndex: number, toIndex: number) => void;
+  sendMessage: (content: string) => void;
+  getWidgetCustomization: (widgetId: string) => WidgetCustomization | undefined;
+  addWorkspaceTab: () => void;
+  setActiveTab: (tabId: string) => void;
+  removeWorkspaceTab: (tabId: string) => void;
+  renameWorkspaceTab: (tabId: string, name: string) => void;
+  selectWidget: (widgetId: string | null) => void;
 }
