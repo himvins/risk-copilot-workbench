@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useWorkspace } from "@/context/WorkspaceContext";
 import { Droppable, Draggable } from "@hello-pangea/dnd";
@@ -17,6 +18,7 @@ import { OperationalRiskEventsWidget } from "./widgets/OperationalRiskEventsWidg
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ResizableWidget } from "./ResizableWidget";
 import { useToast } from "@/hooks/use-toast";
+import { WorkspaceTab } from "@/types";
 
 const widgetComponents: Record<string, React.FC<any>> = {
   "risk-exposure": RiskExposureWidget,
