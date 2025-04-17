@@ -46,13 +46,18 @@ const EditableTab = ({ tab, onRename, onRemove }: EditableTabProps) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     if (editValue.trim()) {
       onRename(tab.id, editValue.trim());
       setIsEditing(false);
     }
   };
 
-  const handleCancel = () => {
+  const handleCancel = (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     setEditValue(tab.name); // Reset to original name
     setIsEditing(false);
   };
@@ -60,47 +65,60 @@ const EditableTab = ({ tab, onRename, onRemove }: EditableTabProps) => {
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Escape") {
       handleCancel();
+    } else if (e.key === "Enter") {
+      handleSubmit(e);
     }
+  };
+
+  const handleClickOutside = (e: React.FocusEvent) => {
+    handleSubmit(e);
   };
 
   if (isEditing) {
     return (
-      <form onSubmit={handleSubmit} className="flex items-center gap-1 px-1">
+      <form onSubmit={handleSubmit} onClick={(e) => e.stopPropagation()} className="flex items-center gap-1 px-1">
         <Input
           value={editValue}
           onChange={(e) => setEditValue(e.target.value)}
           className="h-6 w-24 text-xs"
           autoFocus
-          onBlur={handleSubmit}
+          onBlur={handleClickOutside}
           onKeyDown={handleKeyDown}
         />
-        <button
-          type="button"
-          onClick={handleCancel}
-          className="p-0.5 hover:bg-secondary rounded-full"
+        <span
+          onClick={(e) => handleCancel(e as React.MouseEvent)}
+          className="p-0.5 hover:bg-secondary rounded-full cursor-pointer"
         >
           <X size={14} />
-        </button>
+        </span>
       </form>
     );
   }
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
       <span>{tab.name}</span>
       <div className="flex gap-1">
-        <button
-          onClick={() => setIsEditing(true)}
-          className="p-0.5 hover:bg-secondary rounded-full"
+        <span
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setIsEditing(true);
+          }}
+          className="p-0.5 hover:bg-secondary rounded-full cursor-pointer"
         >
           <Pencil size={14} />
-        </button>
-        <button
-          onClick={(e) => onRemove(tab.id, e)}
-          className="p-0.5 hover:bg-secondary rounded-full"
+        </span>
+        <span
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onRemove(tab.id, e);
+          }}
+          className="p-0.5 hover:bg-secondary rounded-full cursor-pointer"
         >
           <X size={14} />
-        </button>
+        </span>
       </div>
     </div>
   );
