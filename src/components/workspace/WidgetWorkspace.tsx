@@ -52,6 +52,17 @@ const EditableTab = ({ tab, onRename, onRemove }: EditableTabProps) => {
     }
   };
 
+  const handleCancel = () => {
+    setEditValue(tab.name); // Reset to original name
+    setIsEditing(false);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Escape") {
+      handleCancel();
+    }
+  };
+
   if (isEditing) {
     return (
       <form onSubmit={handleSubmit} className="flex items-center gap-1 px-1">
@@ -61,7 +72,15 @@ const EditableTab = ({ tab, onRename, onRemove }: EditableTabProps) => {
           className="h-6 w-24 text-xs"
           autoFocus
           onBlur={handleSubmit}
+          onKeyDown={handleKeyDown}
         />
+        <button
+          type="button"
+          onClick={handleCancel}
+          className="p-0.5 hover:bg-secondary rounded-full"
+        >
+          <X size={14} />
+        </button>
       </form>
     );
   }

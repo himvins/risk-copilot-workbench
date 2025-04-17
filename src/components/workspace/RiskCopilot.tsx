@@ -1,18 +1,51 @@
 
 import React, { useRef, useEffect, FormEvent, useState } from "react";
 import { useWorkspace } from "@/context/WorkspaceContext";
-import { SendIcon, MicIcon, TrashIcon, MousePointerClick } from "lucide-react";
+import { 
+  SendIcon, 
+  MicIcon, 
+  TrashIcon, 
+  MousePointerClick, 
+  Plus, 
+  X, 
+  Columns, 
+  Highlight
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import { 
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList
+} from "@/components/ui/command";
+import { WidgetType } from "@/types";
 
 interface RiskCopilotProps {
   hidden?: boolean;
 }
 
-const suggestions = [
+// Widget suggestions for "Add widget" action
+const widgetOptions: {id: WidgetType, label: string}[] = [
+  { id: "risk-exposure", label: "Risk Exposure" },
+  { id: "counterparty-analysis", label: "Counterparty Analysis" },
+  { id: "market-volatility", label: "Market Volatility" },
+  { id: "risk-alerts", label: "Risk Alerts" },
+  { id: "credit-risk-metrics", label: "Credit Risk Metrics" },
+  { id: "portfolio-heatmap", label: "Portfolio Heatmap" },
+  { id: "transaction-volume", label: "Transaction Volume" },
+  { id: "liquidity-coverage-ratio", label: "Liquidity Coverage" },
+  { id: "regulatory-capital", label: "Regulatory Capital" },
+  { id: "stress-test-scenarios", label: "Stress Testing" },
+  { id: "operational-risk-events", label: "Operational Risk" }
+];
+
+const generalSuggestions = [
   "How to analyze counterparty risk?",
   "Show me market volatility trends",
   "What are the current risk alerts?",
@@ -20,9 +53,31 @@ const suggestions = [
   "Generate risk report summary"
 ];
 
+const widgetSuggestions = [
+  "Add a new widget",
+  "Remove this widget",
+  "Add column to this table",
+  "Highlight important values"
+];
+
+type ActionMode = null | 'add-widget' | 'remove-widget' | 'add-column' | 'highlight-column';
+
 export function RiskCopilot({ hidden = false }: RiskCopilotProps) {
-  const { messages, isProcessing, sendMessage, selectedWidgetId, placedWidgets, selectWidget } = useWorkspace();
+  const { 
+    messages, 
+    isProcessing, 
+    sendMessage, 
+    selectedWidgetId, 
+    placedWidgets, 
+    selectWidget,
+    addWidgetByType,
+    removeWidget,
+    addColumnToWidget
+  } = useWorkspace();
+  
   const [inputValue, setInputValue] = useState("");
+  const [actionMode, setActionMode] = useState<ActionMode>(null);
+  const [searchValue, setSearchValue] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -44,6 +99,167 @@ export function RiskCopilot({ hidden = false }: RiskCopilotProps) {
     if (inputValue.trim() && !isProcessing) {
       sendMessage(inputValue);
       setInputValue("");
+      setActionMode(null);
+    }
+  };
+
+  const handleAddWidget = (widgetType: WidgetType) => {
+    addWidgetByType(widgetType);
+    sendMessage(`Added ${getWidgetLabel(widgetType)} widget to workspace`);
+    setActionMode(null);
+  };
+
+  const handleRemoveWidget = (widgetId: string) => {
+    const widget = placedWidgets.find(w => w.id === widgetId);
+    if (widget) {
+      removeWidget(widgetId);
+      sendMessage(`Removed ${widget.title} widget from workspace`);
+      selectWidget(null);
+      setActionMode(null);
+    }
+  };
+
+  const handleAddColumn = (widgetId: string, columnId: string) => {
+    if (columnId.trim()) {
+      addColumnToWidget(widgetId, columnId);
+      sendMessage(`Added column "${columnId}" to the widget`);
+      setActionMode(null);
+    }
+  };
+
+  const handleHighlightColumn = (column: string) => {
+    // This is a placeholder for column highlighting functionality
+    // In a real implementation, this would update the widget's state
+    sendMessage(`Highlighted column "${column}" in the widget`);
+    setActionMode(null);
+  };
+
+  const getWidgetLabel = (widgetType: WidgetType): string => {
+    const option = widgetOptions.find(opt => opt.id === widgetType);
+    return option ? option.label : widgetType;
+  };
+
+  const renderActionPanel = () => {
+    switch (actionMode) {
+      case 'add-widget':
+        return (
+          <Card className="p-3 mb-4">
+            <div className="mb-2 flex justify-between items-center">
+              <h3 className="text-sm font-medium">Select widget to add</h3>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-7 w-7 p-0" 
+                onClick={() => setActionMode(null)}
+              >
+                <X size={14} />
+              </Button>
+            </div>
+            <Command className="rounded-lg border shadow-md">
+              <CommandInput 
+                placeholder="Search widgets..." 
+                value={searchValue}
+                onValueChange={setSearchValue}
+                className="h-9"
+              />
+              <CommandList className="max-h-[200px]">
+                <CommandEmpty>No widgets found</CommandEmpty>
+                <CommandGroup>
+                  {widgetOptions.map((widget) => (
+                    <CommandItem 
+                      key={widget.id}
+                      onSelect={() => handleAddWidget(widget.id)}
+                      className="text-sm cursor-pointer"
+                    >
+                      {widget.label}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </Card>
+        );
+      
+      case 'add-column':
+        if (!selectedWidgetId) return null;
+        return (
+          <Card className="p-3 mb-4">
+            <div className="mb-2 flex justify-between items-center">
+              <h3 className="text-sm font-medium">Add column to widget</h3>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-7 w-7 p-0" 
+                onClick={() => setActionMode(null)}
+              >
+                <X size={14} />
+              </Button>
+            </div>
+            <form 
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleAddColumn(selectedWidgetId, searchValue);
+              }}
+              className="flex gap-2"
+            >
+              <Input 
+                value={searchValue}
+                onChange={(e) => setSearchValue(e.target.value)}
+                placeholder="Column name"
+                className="flex-1"
+              />
+              <Button 
+                type="submit" 
+                size="sm"
+                disabled={!searchValue.trim()}
+              >
+                Add
+              </Button>
+            </form>
+          </Card>
+        );
+
+      case 'highlight-column':
+        if (!selectedWidgetId) return null;
+        return (
+          <Card className="p-3 mb-4">
+            <div className="mb-2 flex justify-between items-center">
+              <h3 className="text-sm font-medium">Highlight column</h3>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-7 w-7 p-0" 
+                onClick={() => setActionMode(null)}
+              >
+                <X size={14} />
+              </Button>
+            </div>
+            <form 
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleHighlightColumn(searchValue);
+              }}
+              className="flex gap-2"
+            >
+              <Input 
+                value={searchValue}
+                onChange={(e) => setSearchValue(e.target.value)}
+                placeholder="Column name"
+                className="flex-1"
+              />
+              <Button 
+                type="submit" 
+                size="sm"
+                disabled={!searchValue.trim()}
+              >
+                Highlight
+              </Button>
+            </form>
+          </Card>
+        );
+        
+      default:
+        return null;
     }
   };
 
@@ -76,6 +292,66 @@ export function RiskCopilot({ hidden = false }: RiskCopilotProps) {
           </p>
         )}
       </div>
+
+      {/* Action Panel */}
+      {renderActionPanel()}
+
+      {/* Quick Actions */}
+      {!actionMode && (
+        <div className="p-4 border-b border-border">
+          <div className="flex flex-wrap gap-2">
+            <Button 
+              variant="outline" 
+              size="sm"
+              className="flex items-center gap-1"
+              onClick={() => {
+                setActionMode('add-widget');
+                setSearchValue('');
+              }}
+            >
+              <Plus size={14} />
+              <span>Add Widget</span>
+            </Button>
+            {selectedWidget && (
+              <>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className="flex items-center gap-1 text-destructive hover:text-destructive"
+                  onClick={() => handleRemoveWidget(selectedWidget.id)}
+                >
+                  <X size={14} />
+                  <span>Remove Widget</span>
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className="flex items-center gap-1"
+                  onClick={() => {
+                    setActionMode('add-column');
+                    setSearchValue('');
+                  }}
+                >
+                  <Columns size={14} />
+                  <span>Add Column</span>
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className="flex items-center gap-1"
+                  onClick={() => {
+                    setActionMode('highlight-column');
+                    setSearchValue('');
+                  }}
+                >
+                  <Highlight size={14} />
+                  <span>Highlight</span>
+                </Button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Messages Container */}
       <ScrollArea className="flex-1">
@@ -115,14 +391,29 @@ export function RiskCopilot({ hidden = false }: RiskCopilotProps) {
               {selectedWidget ? (
                 <div className="space-y-2">
                   <p>You've selected the <strong>{selectedWidget.title}</strong> widget</p>
-                  <p className="text-sm">Ask questions or request modifications for this widget</p>
+                  <p className="text-sm">Try these actions:</p>
+                  <div className="flex flex-col gap-2 mt-4">
+                    {widgetSuggestions.map((suggestion, index) => (
+                      <Button
+                        key={index}
+                        variant="outline"
+                        className="text-sm"
+                        onClick={() => {
+                          setInputValue(suggestion);
+                          inputRef.current?.focus();
+                        }}
+                      >
+                        {suggestion}
+                      </Button>
+                    ))}
+                  </div>
                 </div>
               ) : (
                 <div className="space-y-2">
                   <p>No messages yet</p>
                   <p className="text-sm mt-1">Try these suggestions:</p>
                   <div className="flex flex-col gap-2 mt-4">
-                    {suggestions.map((suggestion, index) => (
+                    {generalSuggestions.map((suggestion, index) => (
                       <Button
                         key={index}
                         variant="outline"
