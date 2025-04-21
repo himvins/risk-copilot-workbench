@@ -1,6 +1,6 @@
 
 import React from "react";
-import { useWorkspace } from "@/context/WorkspaceContext";
+import { useWorkspace } from "@/hooks/useWorkspace";
 import { Droppable, Draggable } from "@hello-pangea/dnd";
 import { 
   BarChart3, Activity, LineChart, AlertCircle, Scale, DollarSign,
@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { WidgetType } from "@/types";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useToast } from "@/hooks/use-toast";
 
 interface WidgetTemplate {
   type: WidgetType;
@@ -93,6 +94,7 @@ const availableWidgets: WidgetTemplate[] = [
 export function WidgetGallery({ iconOnly = false, hidden = false }: WidgetGalleryProps) {
   const { placedWidgets, addWidgetByType, activeTabId } = useWorkspace();
   const isMobile = useIsMobile();
+  const { toast } = useToast();
   
   if (hidden) {
     return null;
@@ -104,6 +106,16 @@ export function WidgetGallery({ iconOnly = false, hidden = false }: WidgetGaller
       .filter(w => w.tabId === activeTabId)
       .map(w => w.type)
   );
+  
+  const handleWidgetClick = (type: WidgetType, isPlaced: boolean) => {
+    if (isPlaced) return;
+    
+    addWidgetByType(type);
+    toast({
+      title: "Widget added",
+      description: `Added ${type.replace(/-/g, ' ')} widget to workspace`
+    });
+  };
   
   return (
     <div className="h-full bg-secondary/30 p-3 overflow-y-auto">
@@ -143,12 +155,9 @@ export function WidgetGallery({ iconOnly = false, hidden = false }: WidgetGaller
                         ${snapshot.isDragging ? "opacity-50 ring-2 ring-primary" : ""}
                         ${isPlaced 
                           ? "bg-muted/20 border-border/50 text-muted-foreground" 
-                          : "bg-card hover:bg-card/80 border-border"}
+                          : "bg-card hover:bg-card/80 border-border hover:border-primary/50 hover:shadow-md"}
                       `}
-                      onClick={() => 
-                        !isPlaced && 
-                        addWidgetByType(widget.type)
-                      }
+                      onClick={() => handleWidgetClick(widget.type, isPlaced)}
                     >
                       <div className={`flex ${iconOnly ? "flex-col items-center" : "items-center gap-3"}`}>
                         <div className={`bg-secondary/50 p-2 rounded-md ${iconOnly ? "mb-1" : ""}`}>

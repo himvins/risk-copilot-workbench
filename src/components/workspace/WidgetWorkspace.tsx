@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useWorkspace } from "@/context/WorkspaceContext";
+import { useWorkspace } from "@/hooks/useWorkspace";
 import { Droppable, Draggable } from "@hello-pangea/dnd";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -44,6 +44,11 @@ const EditableTab = ({ tab, onRename, onRemove }: EditableTabProps) => {
   const [editValue, setEditValue] = useState(tab.name);
   const formRef = useRef<HTMLFormElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  
+  // Make sure to update editValue when tab name changes from props
+  useEffect(() => {
+    setEditValue(tab.name);
+  }, [tab.name]);
   
   useEffect(() => {
     if (isEditing) {
@@ -212,6 +217,7 @@ export function WidgetWorkspace() {
   
   const handleRemoveTab = (tabId: string, e: React.MouseEvent) => {
     e.stopPropagation();
+    // Make sure this doesn't get prevented elsewhere
     removeWorkspaceTab(tabId);
   };
 

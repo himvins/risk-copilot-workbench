@@ -123,4 +123,60 @@
   .text-financial-negative {
     @apply text-widget-red;
   }
+  
+  /* AG Grid Theme Customizations */
+  .ag-theme-alpine,
+  .ag-theme-alpine-dark {
+    --ag-font-family: inherit;
+    --ag-font-size: 12px;
+  }
+  
+  .ag-theme-alpine {
+    --ag-background-color: #ffffff;
+    --ag-odd-row-background-color: #f8fafc;
+    --ag-header-background-color: #f1f5f9;
+    --ag-border-color: #e2e8f0;
+  }
+  
+  .ag-theme-alpine-dark {
+    --ag-background-color: #1e293b;
+    --ag-odd-row-background-color: #263448;
+    --ag-header-background-color: #334155;
+    --ag-border-color: #475569;
+  }
+  
+  .ai-column-header {
+    @apply bg-primary/10 text-primary;
+  }
+  
+  /* Improved Light Mode Contrast */
+  :root {
+    /* Active Tab Indicator */
+    --active-tab-bg: #e0f2fe;
+    --active-tab-border: #0284c7;
+    
+    /* Card Highlight */
+    --card-hover: #f0f9ff;
+    --card-active: #e0f7fa;
+  }
+  
+  /* Widget Gallery Cards */
+  .bg-card {
+    @apply shadow-sm;
+  }
+  
+  /* Tab styling improvements */
+  [data-state="active"].tab {
+    @apply bg-blue-50 border-b-2 border-primary font-medium;
+  }
+  
+  /* Tab List improved contrast */
+  .TabsList {
+    @apply bg-slate-100 p-0.5 rounded-md;
+  }
+  
+  /* Improved drag target visibility */
+  [data-droppable="true"].bg-primary\/5 {
+    @apply bg-blue-100/50 ring-2 ring-blue-300;
+  }
 }

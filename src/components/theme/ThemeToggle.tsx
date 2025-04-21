@@ -1,31 +1,40 @@
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
-import { useEffect, useState } from "react";
-import { useDispatch } from 'react-redux';
-import { useDynamicReducer } from "@/hooks/useDynamicReducer";
-import { themeReducer, setTheme as setReduxTheme } from "@/store/features/theme/themeSlice";
+import { messageBus } from "@/lib/messageBus";
+import { MessageTopics } from "@/lib/messageTopics";
+import { useThemeService } from "@/lib/themeService";
 
 export function ThemeToggle() {
   const { setTheme, theme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
-  const dispatch = useDispatch();
-
-  // Register the dynamic reducer
-  useDynamicReducer('theme', themeReducer);
-
+  const themeService = useThemeService();
+  
   // Ensure component is mounted before accessing theme
   useEffect(() => {
     setMounted(true);
   }, []);
 
+  // Sync next-themes with our theme service
+  useEffect(() => {
+    if (mounted && resolvedTheme) {
+      // Only sync if there's a mismatch
+      if (themeService.currentTheme !== resolvedTheme) {
+        themeService.setTheme(resolvedTheme as 'light' | 'dark');
+      }
+    }
+  }, [mounted, resolvedTheme, themeService]);
+
   const toggleTheme = () => {
     const newTheme = resolvedTheme === "dark" ? "light" : "dark";
     console.log("Current theme:", resolvedTheme);
     setTheme(newTheme);
-    dispatch(setReduxTheme(newTheme));
+    
+    // Sync with theme service
+    themeService.setTheme(newTheme as 'light' | 'dark');
+    
     console.log("Switching to:", newTheme);
   };
 

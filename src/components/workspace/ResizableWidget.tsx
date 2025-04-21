@@ -3,7 +3,7 @@ import React, { useState, useRef } from 'react';
 import { X, Maximize2, Minimize2, Move } from 'lucide-react';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 import { useToast } from "@/hooks/use-toast";
-import { useWorkspace } from "@/context/WorkspaceContext";
+import { useWorkspace } from "@/hooks/useWorkspace";
 import { cn } from "@/lib/utils";
 
 interface ResizableWidgetProps {
