@@ -122,17 +122,17 @@ export function initializePersistenceListeners() {
       const tabs = workspaceService.getWorkspaceTabs();
       persistenceService.saveTabs(tabs);
     }),
-    messageBus.subscribe(MessageTopics.WORKSPACE.RENAME_TAB, ({ tabId, name }) => {
+    messageBus.subscribe(MessageTopics.WORKSPACE.RENAME_TAB, (payload: { tabId: string, name: string }) => { // Fix: Added proper type
       // Save the updated tabs after a tab is renamed
       const tabs = workspaceService.getWorkspaceTabs();
       persistenceService.saveTabs(tabs);
     }),
     messageBus.subscribe(MessageTopics.WORKSPACE.ACTIVE_TAB_CHANGED, persistenceService.saveActiveTabId),
-    messageBus.subscribe(MessageTopics.CHAT.NEW_MESSAGE, (message) => {
+    messageBus.subscribe(MessageTopics.CHAT.NEW_MESSAGE, (message: Message) => { // Fix: Added type
       // When a new message is added, save all messages
       const messages = messageBus.getLastValue(MessageTopics.CHAT.MESSAGES_CHANGED) || [];
-      persistenceService.saveMessages([...messages, message]);
-      messageBus.publish(MessageTopics.CHAT.MESSAGES_CHANGED, [...messages, message]);
+      persistenceService.saveMessages([...messages as Message[], message]); // Fix: Added type assertion
+      messageBus.publish(MessageTopics.CHAT.MESSAGES_CHANGED, [...messages as Message[], message]); // Fix: Added type assertion
     }),
     messageBus.subscribe(MessageTopics.PERSISTENCE.RESET_STATE, () => {
       persistenceService.resetAll();

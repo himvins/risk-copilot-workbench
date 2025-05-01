@@ -262,7 +262,7 @@ const initializeNotificationListeners = (): () => void => {
   startNotificationSimulation(60000);
   
   return () => {
-    unsubscribeNotificationClick();
+    unsubscribeNotificationClick.unsubscribe(); // Fix: Call unsubscribe() method on the Subscription object
     stopNotificationSimulation();
   };
 };
