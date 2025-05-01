@@ -34,5 +34,20 @@ export const MessageTopics = {
     SAVE_STATE: 'persistence/save-state',
     LOAD_STATE: 'persistence/load-state',
     RESET_STATE: 'persistence/reset-state'
+  },
+
+  // Agent related topics
+  AGENT: {
+    DATA_QUALITY_ALERT: 'agent/data-quality-alert',
+    REMEDIATION_ACTION: 'agent/remediation-action',
+    LEARNING_UPDATE: 'agent/learning-update',
+    NOTIFICATION_CLICKED: 'agent/notification-clicked'
+  },
+
+  // Notification related topics
+  NOTIFICATION: {
+    NEW_NOTIFICATION: 'notification/new-notification',
+    NOTIFICATION_CLICKED: 'notification/notification-clicked',
+    NOTIFICATION_PERMISSION_CHANGED: 'notification/permission-changed'
   }
 };

@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import { useEffect } from "react";
 import { initializeWorkspaceListeners } from "@/lib/workspaceService";
+import { initializeNotificationListeners } from "@/lib/notificationService";
 import { WidgetGallery } from "./components/workspace/WidgetGallery";
 import { CounterpartyAnalysisWidget } from "./components/workspace/widgets/CounterpartyAnalysisWidget";
 
@@ -17,10 +18,15 @@ const queryClient = new QueryClient();
 // Initialize all message bus listeners on app startup
 function MessageBusInitializer() {
   useEffect(() => {
-    const cleanup = initializeWorkspaceListeners();
-    console.log("Message bus and persistence listeners initialized");
+    const cleanupWorkspace = initializeWorkspaceListeners();
+    const cleanupNotifications = initializeNotificationListeners();
     
-    return cleanup;
+    console.log("Message bus, persistence, and notification listeners initialized");
+    
+    return () => {
+      cleanupWorkspace();
+      cleanupNotifications();
+    };
   }, []);
   
   return null;

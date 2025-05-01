@@ -3,8 +3,9 @@ import { useState, useEffect, useCallback } from 'react';
 import { messageBus } from '@/lib/messageBus';
 import { workspaceService } from '@/lib/workspaceService';
 import { MessageTopics } from '@/lib/messageTopics';
-import { Widget, Message, WidgetType, WorkspaceTab, WidgetCustomization } from '@/types';
+import { Widget, Message, WidgetType, WorkspaceTab, WidgetCustomization, Notification } from '@/types';
 import { useSubscription } from './useMessageBus';
+import { notificationService } from '@/lib/notificationService';
 
 export function useWorkspace() {
   // Use subscriptions to get state from message bus
@@ -14,6 +15,18 @@ export function useWorkspace() {
   const workspaceTabs = useSubscription<WorkspaceTab[]>(MessageTopics.WORKSPACE.ADD_TAB, workspaceService.getWorkspaceTabs());
   const activeTabId = useSubscription<string>(MessageTopics.WORKSPACE.ACTIVE_TAB_CHANGED, workspaceService.getActiveTabId());
   const selectedWidgetId = useSubscription<string | null>(MessageTopics.WORKSPACE.SELECT_WIDGET, workspaceService.getSelectedWidgetId());
+  const notifications = useSubscription<Notification[]>(MessageTopics.NOTIFICATION.NEW_NOTIFICATION, []);
+  const notificationPermission = useSubscription<NotificationPermission>(
+    MessageTopics.NOTIFICATION.NOTIFICATION_PERMISSION_CHANGED, 
+    notificationService.getNotificationPermission()
+  );
+
+  // Request notification permission on component mount
+  useEffect(() => {
+    if (notificationService.getNotificationPermission() !== 'granted') {
+      notificationService.requestNotificationPermission();
+    }
+  }, []);
 
   // Expose service methods
   return {
@@ -24,6 +37,8 @@ export function useWorkspace() {
     workspaceTabs: workspaceTabs || [],
     activeTabId: activeTabId || '',
     selectedWidgetId,
+    notifications: notificationService.getAllNotifications(),
+    notificationPermission,
     
     // Widget actions
     addWidgetByType: useCallback((widgetType: WidgetType) => {
@@ -81,6 +96,34 @@ export function useWorkspace() {
     // State management
     resetAllState: useCallback(() => {
       workspaceService.resetAllState();
+    }, []),
+    
+    // Notification methods
+    requestNotificationPermission: useCallback(async () => {
+      return await notificationService.requestNotificationPermission();
+    }, []),
+    
+    getNotificationUnreadCount: useCallback(() => {
+      return notificationService.getUnreadCount();
+    }, []),
+    
+    markNotificationAsRead: useCallback((id: string) => {
+      notificationService.markNotificationAsRead(id);
+    }, []),
+    
+    clearAllNotifications: useCallback(() => {
+      notificationService.clearAllNotifications();
+    }, []),
+
+    // For demo/testing purposes
+    triggerTestNotification: useCallback((type: "data-quality" | "remediation" | "learning") => {
+      if (type === "data-quality") {
+        notificationService.simulateDataQualityInsight();
+      } else if (type === "remediation") {
+        notificationService.simulateRemediationAction();
+      } else {
+        notificationService.simulateLearningEvent();
+      }
     }, []),
   };
 }

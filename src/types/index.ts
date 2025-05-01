@@ -1,3 +1,4 @@
+
 import { ReactNode } from "react";
 
 export interface Widget {
@@ -26,7 +27,10 @@ export type WidgetType =
   | "liquidity-coverage-ratio"
   | "regulatory-capital"
   | "stress-test-scenarios"
-  | "operational-risk-events";
+  | "operational-risk-events"
+  | "data-quality-insights"
+  | "remediation-history"
+  | "learning-agent";
 
 export interface Message {
   id: string;
@@ -82,4 +86,56 @@ export interface WorkspaceContextType {
   removeWorkspaceTab: (tabId: string) => void;
   renameWorkspaceTab: (tabId: string, name: string) => void;
   selectWidget: (widgetId: string | null) => void;
+}
+
+// New types for notifications and agents
+
+export interface Notification {
+  id: string;
+  title: string;
+  body: string;
+  timestamp: Date;
+  type: NotificationType;
+  read: boolean;
+  data?: any;
+}
+
+export type NotificationType = 
+  | "data-quality-alert"
+  | "remediation-action"
+  | "learning-update";
+
+export interface AgentInsight {
+  id: string;
+  title: string;
+  description: string;
+  timestamp: Date;
+  severity: "low" | "medium" | "high" | "critical";
+  source: string;
+  relatedEntities?: string[];
+  metadata?: Record<string, any>;
+}
+
+export interface RemediationAction {
+  id: string;
+  title: string;
+  description: string;
+  timestamp: Date;
+  status: "pending" | "completed" | "failed";
+  insightId?: string;
+  actionTaken?: string;
+  result?: string;
+  metadata?: Record<string, any>;
+}
+
+export interface LearningEvent {
+  id: string;
+  title: string;
+  description: string;
+  timestamp: Date;
+  dataSource: string;
+  dataPoints: number;
+  learningType: "supervised" | "unsupervised" | "reinforcement";
+  metrics?: Record<string, any>;
+  metadata?: Record<string, any>;
 }

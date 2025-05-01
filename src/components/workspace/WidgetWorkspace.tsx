@@ -14,6 +14,9 @@ import { LiquidityCoverageWidget } from "./widgets/LiquidityCoverageWidget";
 import { RegulatoryCapitalWidget } from "./widgets/RegulatoryCapitalWidget";
 import { StressTestScenariosWidget } from "./widgets/StressTestScenariosWidget";
 import { OperationalRiskEventsWidget } from "./widgets/OperationalRiskEventsWidget";
+import { DataQualityInsightsWidget } from "./widgets/DataQualityInsightsWidget";
+import { RemediationHistoryWidget } from "./widgets/RemediationHistoryWidget";
+import { LearningAgentWidget } from "./widgets/LearningAgentWidget";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ResizableWidget } from "./ResizableWidget";
 import { useToast } from "@/hooks/use-toast";
@@ -31,6 +34,9 @@ const widgetComponents: Record<string, React.FC<any>> = {
   "regulatory-capital": RegulatoryCapitalWidget,
   "stress-test-scenarios": StressTestScenariosWidget,
   "operational-risk-events": OperationalRiskEventsWidget,
+  "data-quality-insights": DataQualityInsightsWidget,
+  "remediation-history": RemediationHistoryWidget,
+  "learning-agent": LearningAgentWidget,
 };
 
 interface EditableTabProps {
