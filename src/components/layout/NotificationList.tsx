@@ -3,7 +3,6 @@ import React from "react";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { Notification } from "@/types";
 import { formatDistanceToNow } from "date-fns";
 import { 
   AlertTriangle, 
@@ -13,7 +12,6 @@ import {
   BellOff 
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Separator } from "@/components/ui/separator";
 
 interface NotificationListProps {
   onClose?: () => void;
@@ -22,7 +20,7 @@ interface NotificationListProps {
 export function NotificationList({ onClose }: NotificationListProps) {
   const { notifications, markNotificationAsRead, clearAllNotifications, triggerTestNotification } = useWorkspace();
 
-  const handleNotificationClick = (notification: Notification) => {
+  const handleNotificationClick = (notification: any) => {
     markNotificationAsRead(notification.id);
     
     // This will simulate adding the corresponding widget
@@ -37,6 +35,11 @@ export function NotificationList({ onClose }: NotificationListProps) {
     if (onClose) {
       onClose();
     }
+  };
+  
+  const handleClearAll = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    clearAllNotifications();
   };
 
   const getIcon = (type: string) => {
@@ -53,14 +56,14 @@ export function NotificationList({ onClose }: NotificationListProps) {
   };
 
   return (
-    <div className="flex flex-col h-full max-h-[500px]">
+    <div className="flex flex-col h-full max-h-[500px] min-w-[320px]">
       <div className="p-3 flex items-center justify-between border-b">
         <h3 className="font-medium">Notifications</h3>
         {notifications.length > 0 && (
           <Button 
             variant="ghost" 
             size="sm" 
-            onClick={clearAllNotifications}
+            onClick={handleClearAll}
             className="h-8 px-2 text-xs"
           >
             <Trash2 size={14} className="mr-1" />
@@ -81,7 +84,7 @@ export function NotificationList({ onClose }: NotificationListProps) {
               <button
                 key={notification.id}
                 className={cn(
-                  "flex flex-col text-left px-4 py-3 hover:bg-muted/50 transition-colors",
+                  "flex flex-col text-left px-4 py-3 hover:bg-muted/50 transition-colors w-full",
                   !notification.read && "bg-muted/30"
                 )}
                 onClick={() => handleNotificationClick(notification)}
@@ -93,7 +96,7 @@ export function NotificationList({ onClose }: NotificationListProps) {
                     {formatDistanceToNow(new Date(notification.timestamp), { addSuffix: true })}
                   </span>
                 </div>
-                <p className="text-xs text-muted-foreground pl-6">{notification.body}</p>
+                <p className="text-xs text-muted-foreground pl-6 line-clamp-2">{notification.body}</p>
               </button>
             ))}
           </div>
@@ -102,7 +105,7 @@ export function NotificationList({ onClose }: NotificationListProps) {
         {/* Testing controls - for demonstration */}
         <div className="p-3 border-t">
           <p className="text-xs text-muted-foreground mb-2">Demo Controls:</p>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <Button 
               variant="outline" 
               size="sm"

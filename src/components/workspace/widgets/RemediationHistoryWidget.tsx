@@ -4,25 +4,26 @@ import { WidgetComponentProps, RemediationAction } from "@/types";
 import { useState, useEffect } from "react";
 import { messageBus } from "@/lib/messageBus";
 import { MessageTopics } from "@/lib/messageTopics";
-import { Shield, Hourglass, Check, X, Clock, Calendar, ChevronRight } from "lucide-react";
-import { formatDistanceToNow, format } from "date-fns";
+import { formatDistanceToNow } from "date-fns";
+import { Shield, CheckCircle, XCircle, Clock, Filter } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Timeline, TimelineItem, TimelineConnector, TimelineHeader, TimelineIcon, TimelineTitle, TimelineDescription } from "@/components/ui/timeline";
+import { Progress } from "@/components/ui/progress";
+import { Separator } from "@/components/ui/separator";
 
 export function RemediationHistoryWidget({ widget, onClose }: WidgetComponentProps) {
-  const [actions, setActions] = useState<RemediationAction[]>([]);
+  const [remediationActions, setRemediationActions] = useState<RemediationAction[]>([]);
   const [selectedAction, setSelectedAction] = useState<RemediationAction | null>(null);
   const [filter, setFilter] = useState<"all" | "completed" | "pending" | "failed">("all");
-
+  
   // Subscribe to remediation actions
   useEffect(() => {
     const subscription = messageBus.subscribe(
       MessageTopics.AGENT.REMEDIATION_ACTION,
       (action: RemediationAction) => {
-        setActions(prev => {
+        setRemediationActions(prev => {
           // Don't add duplicates
           if (prev.some(a => a.id === action.id)) {
             return prev;
@@ -32,71 +33,84 @@ export function RemediationHistoryWidget({ widget, onClose }: WidgetComponentPro
       }
     );
 
-    // Generate some initial actions for demo
-    if (actions.length === 0) {
-      const generateRandomActions = () => {
+    // Generate demo data
+    if (remediationActions.length === 0) {
+      const generateDemoActions = () => {
         const demoActions: RemediationAction[] = [
           {
-            id: "rem-1",
-            title: "Automated Data Correction",
-            description: "Automatically corrected missing values in transaction dataset using predictive modeling.",
+            id: "ra-1",
+            title: "Data Normalization",
+            description: "Remediation agent normalized outlier values in transaction dataset.",
             timestamp: new Date(Date.now() - 1000 * 60 * 15),
             status: "completed",
-            actionTaken: "Applied MICE (Multivariate Imputation by Chained Equations) algorithm to fill missing values based on historical patterns.",
-            result: "Successfully imputed 157 missing values with 95% confidence interval.",
+            actionTaken: "Statistical normalization applied to outlier values that exceeded 3 standard deviations.",
+            result: "97% of identified issues were successfully resolved.",
             metadata: {
-              executionTime: "45 seconds",
-              modelAccuracy: "97.3%"
+              correctedRecords: 157,
+              executionTime: "45 seconds"
             }
           },
           {
-            id: "rem-2",
-            title: "Schema Validation Enhancement",
-            description: "Updated schema validation rules to prevent future data schema drift issues.",
-            timestamp: new Date(Date.now() - 1000 * 60 * 120),
-            status: "completed",
-            actionTaken: "Added strict schema validation at data ingestion points with automated alerts.",
-            result: "Schema validation now enforced across all 12 data pipelines.",
-            metadata: {
-              executionTime: "2 minutes",
-              affectedSystems: "Data Ingestion, ETL Pipeline, Data Lake"
-            }
-          },
-          {
-            id: "rem-3",
-            title: "Anomaly Detection Model Update",
-            description: "Updating anomaly detection models to improve accuracy for market volatility data.",
-            timestamp: new Date(Date.now() - 1000 * 60 * 30),
+            id: "ra-2",
+            title: "Missing Value Imputation",
+            description: "Filling missing values in market data feed with ML-predicted values.",
+            timestamp: new Date(Date.now() - 1000 * 60 * 60),
             status: "pending",
-            actionTaken: "Training new LSTM neural network model with expanded feature set.",
-            result: "Model training in progress, estimated completion in 30 minutes.",
+            actionTaken: "Advanced ML-based imputation being applied to critical fields.",
+            result: "In progress - 65% complete",
             metadata: {
-              progress: "65%",
-              estimatedCompletion: "30 minutes"
+              correctedRecords: 48,
+              executionTime: "2 minutes (ongoing)"
             }
           },
           {
-            id: "rem-4",
-            title: "Data Pipeline Recovery",
-            description: "Attempted recovery of failed data pipeline for overnight batch processing.",
-            timestamp: new Date(Date.now() - 1000 * 60 * 240),
+            id: "ra-3",
+            title: "Schema Correction",
+            description: "Attempted to align schema changes with documentation.",
+            timestamp: new Date(Date.now() - 1000 * 60 * 180),
             status: "failed",
-            actionTaken: "Executed automatic retry with exponential backoff strategy.",
-            result: "Failed to recover after 5 attempts. Marked for manual intervention.",
+            actionTaken: "Tried to update field mappings to match new schema.",
+            result: "Failed due to insufficient permissions to the schema registry.",
             metadata: {
-              errorCode: "CONN_TIMEOUT",
-              attempts: 5
+              correctedRecords: 0,
+              executionTime: "12 seconds"
+            }
+          },
+          {
+            id: "ra-4",
+            title: "Data Deduplication",
+            description: "Removed duplicate transaction records created by system error.",
+            timestamp: new Date(Date.now() - 1000 * 60 * 240),
+            status: "completed",
+            actionTaken: "Identified and removed duplicate entries based on transaction ID and timestamp.",
+            result: "Successfully removed 283 duplicate records.",
+            metadata: {
+              correctedRecords: 283,
+              executionTime: "37 seconds"
+            }
+          },
+          {
+            id: "ra-5",
+            title: "Field Type Correction",
+            description: "Converted incorrectly formatted date fields to proper date type.",
+            timestamp: new Date(Date.now() - 1000 * 60 * 300),
+            status: "completed",
+            actionTaken: "Type conversion applied to date fields in string format.",
+            result: "All 1,245 records successfully converted.",
+            metadata: {
+              correctedRecords: 1245,
+              executionTime: "68 seconds"
             }
           }
         ];
         
-        setActions(demoActions);
+        setRemediationActions(demoActions);
         if (demoActions.length > 0) {
           setSelectedAction(demoActions[0]);
         }
       };
       
-      generateRandomActions();
+      generateDemoActions();
     }
 
     return () => {
@@ -104,7 +118,8 @@ export function RemediationHistoryWidget({ widget, onClose }: WidgetComponentPro
     };
   }, []);
 
-  const filteredActions = actions.filter(action => {
+  // Filter actions based on selected status
+  const filteredActions = remediationActions.filter(action => {
     if (filter === "all") return true;
     return action.status === filter;
   });
@@ -112,31 +127,38 @@ export function RemediationHistoryWidget({ widget, onClose }: WidgetComponentPro
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "completed":
-        return <Check size={14} className="text-green-600" />;
+        return <CheckCircle size={16} className="text-green-500" />;
       case "pending":
-        return <Hourglass size={14} className="text-amber-500" />;
+        return <Clock size={16} className="text-amber-500" />;
       case "failed":
-        return <X size={14} className="text-red-600" />;
+        return <XCircle size={16} className="text-red-500" />;
       default:
-        return <Shield size={14} />;
+        return <Shield size={16} />;
     }
   };
 
-  const getStatusBadge = (status: string) => {
+  const getStatusColor = (status: string) => {
     switch (status) {
       case "completed":
-        return <Badge className="bg-green-500">Completed</Badge>;
+        return "bg-green-500 text-white";
       case "pending":
-        return <Badge variant="outline" className="text-amber-500 border-amber-500">In Progress</Badge>;
+        return "bg-amber-500 text-white";
       case "failed":
-        return <Badge variant="destructive">Failed</Badge>;
+        return "bg-red-500 text-white";
       default:
-        return <Badge variant="outline">Unknown</Badge>;
+        return "bg-slate-500 text-white";
     }
   };
 
-  const getFormattedDate = (date: Date) => {
-    return format(new Date(date), "PPP p");
+  // For the progress indicator on pending tasks
+  const getCompletionPercent = (result: string): number => {
+    if (!result.includes("progress")) return 100;
+    
+    const match = result.match(/(\d+)%/);
+    if (match && match[1]) {
+      return parseInt(match[1], 10);
+    }
+    return 50; // Default to 50% if can't determine
   };
 
   return (
@@ -147,138 +169,140 @@ export function RemediationHistoryWidget({ widget, onClose }: WidgetComponentPro
           {widget.title}
         </CardTitle>
         <CardDescription>
-          History of actions taken by the remediation agent
+          History of automated remediation actions
         </CardDescription>
       </CardHeader>
       <CardContent className="p-0">
-        <Tabs defaultValue="all" className="w-full" onValueChange={(v) => setFilter(v as any)}>
-          <div className="px-4 pt-2">
-            <TabsList className="w-full grid grid-cols-4">
-              <TabsTrigger value="all">All</TabsTrigger>
-              <TabsTrigger value="completed">Completed</TabsTrigger>
-              <TabsTrigger value="pending">In Progress</TabsTrigger>
-              <TabsTrigger value="failed">Failed</TabsTrigger>
-            </TabsList>
-          </div>
-          
-          <TabsContent value={filter} className="mt-0">
-            <div className="flex flex-col md:flex-row h-[calc(100%-2rem)]">
-              {/* Left column - List of actions */}
-              <div className="w-full md:w-2/5 border-r">
-                <ScrollArea className="h-[300px]">
-                  <div className="p-3 space-y-1">
-                    {filteredActions.map(action => (
-                      <Button
-                        key={action.id}
-                        variant={selectedAction?.id === action.id ? "secondary" : "ghost"}
-                        className="w-full justify-start text-left h-auto py-2"
-                        onClick={() => setSelectedAction(action)}
-                      >
-                        <div className="flex items-start gap-2">
-                          <div className="mt-0.5">{getStatusIcon(action.status)}</div>
-                          <div className="flex-1 overflow-hidden">
-                            <h4 className="text-xs font-medium truncate">{action.title}</h4>
-                            <p className="text-xs text-muted-foreground truncate">
-                              {formatDistanceToNow(new Date(action.timestamp), { addSuffix: true })}
-                            </p>
-                          </div>
-                          <ChevronRight size={14} className="shrink-0 opacity-50" />
-                        </div>
-                      </Button>
-                    ))}
-                    
-                    {filteredActions.length === 0 && (
-                      <div className="py-8 text-center text-muted-foreground">
-                        <p>No {filter !== "all" ? filter : ""} actions found</p>
-                      </div>
-                    )}
-                  </div>
-                </ScrollArea>
-              </div>
-              
-              {/* Right column - Selected action details */}
-              <div className="w-full md:w-3/5 p-4">
-                {selectedAction ? (
-                  <div className="space-y-4">
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <h3 className="font-medium">{selectedAction.title}</h3>
-                        {getStatusBadge(selectedAction.status)}
-                      </div>
-                      <p className="text-sm text-muted-foreground">{selectedAction.description}</p>
-                    </div>
-                    
-                    <Timeline>
-                      <TimelineItem>
-                        <TimelineHeader>
-                          <TimelineIcon>
-                            <Calendar size={12} />
-                          </TimelineIcon>
-                          <TimelineTitle className="text-sm">Action Initiated</TimelineTitle>
-                        </TimelineHeader>
-                        <TimelineDescription className="text-xs">
-                          {getFormattedDate(selectedAction.timestamp)}
-                        </TimelineDescription>
-                      </TimelineItem>
-                      
-                      <TimelineConnector />
-                      
-                      <TimelineItem>
-                        <TimelineHeader>
-                          <TimelineIcon>
-                            <Shield size={12} />
-                          </TimelineIcon>
-                          <TimelineTitle className="text-sm">Action Taken</TimelineTitle>
-                        </TimelineHeader>
-                        <TimelineDescription className="text-xs">
-                          {selectedAction.actionTaken}
-                        </TimelineDescription>
-                      </TimelineItem>
-                      
-                      <TimelineConnector />
-                      
-                      <TimelineItem>
-                        <TimelineHeader>
-                          <TimelineIcon>
-                            {selectedAction.status === "completed" ? (
-                              <Check size={12} />
-                            ) : selectedAction.status === "failed" ? (
-                              <X size={12} />
-                            ) : (
-                              <Clock size={12} />
-                            )}
-                          </TimelineIcon>
-                          <TimelineTitle className="text-sm">Result</TimelineTitle>
-                        </TimelineHeader>
-                        <TimelineDescription className="text-xs">
-                          {selectedAction.result}
-                        </TimelineDescription>
-                      </TimelineItem>
-                    </Timeline>
-                    
-                    {selectedAction.metadata && (
-                      <div className="rounded-md border p-3">
-                        <h4 className="text-sm font-medium mb-2">Details</h4>
-                        <div className="grid grid-cols-2 gap-y-2 text-xs">
-                          {Object.entries(selectedAction.metadata).map(([key, value]) => (
-                            <div key={key}>
-                              <span className="text-muted-foreground capitalize">{key.replace(/([A-Z])/g, ' $1')}: </span>
-                              <span>{value}</span>
-                            </div>
-                          ))}
+        <div className="flex flex-col md:flex-row h-[calc(100%-1rem)]">
+          {/* Left column - List of remediation actions with filters */}
+          <div className="w-full md:w-1/3 border-r">
+            <div className="p-2 border-b">
+              <Tabs 
+                value={filter} 
+                onValueChange={(value) => setFilter(value as any)}
+                className="w-full"
+              >
+                <TabsList className="w-full grid grid-cols-4 h-8">
+                  <TabsTrigger value="all" className="text-xs">All</TabsTrigger>
+                  <TabsTrigger value="completed" className="text-xs">Completed</TabsTrigger>
+                  <TabsTrigger value="pending" className="text-xs">Pending</TabsTrigger>
+                  <TabsTrigger value="failed" className="text-xs">Failed</TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
+            
+            <ScrollArea className="h-[300px]">
+              <div className="p-3 space-y-1">
+                {filteredActions.length > 0 ? (
+                  filteredActions.map(action => (
+                    <Button
+                      key={action.id}
+                      variant={selectedAction?.id === action.id ? "secondary" : "ghost"}
+                      className="w-full justify-start text-left h-auto py-2"
+                      onClick={() => setSelectedAction(action)}
+                    >
+                      <div className="flex items-start gap-2">
+                        <div className="mt-0.5">{getStatusIcon(action.status)}</div>
+                        <div className="flex-1 overflow-hidden">
+                          <h4 className="text-xs font-medium truncate">{action.title}</h4>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {formatDistanceToNow(new Date(action.timestamp), { addSuffix: true })}
+                          </p>
                         </div>
                       </div>
-                    )}
-                  </div>
+                    </Button>
+                  ))
                 ) : (
-                  <div className="flex items-center justify-center h-full text-muted-foreground">
-                    <p>Select an action to view details</p>
+                  <div className="flex flex-col items-center justify-center h-40 text-muted-foreground">
+                    <Filter size={24} className="mb-2 opacity-50" />
+                    <p className="text-sm">No actions match the selected filter</p>
                   </div>
                 )}
               </div>
-            </div>
-          </TabsContent>
-        </Tabs>
+            </ScrollArea>
+          </div>
+          
+          {/* Right column - Remediation action details */}
+          <div className="w-full md:w-2/3 p-4">
+            {selectedAction ? (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-medium">{selectedAction.title}</h3>
+                  <Badge 
+                    variant="outline" 
+                    className={getStatusColor(selectedAction.status)}
+                  >
+                    {selectedAction.status}
+                  </Badge>
+                </div>
+                
+                <p className="text-xs text-muted-foreground">{selectedAction.description}</p>
+                
+                <div className="bg-muted/30 p-3 rounded-md">
+                  <h4 className="text-xs font-medium mb-1">Action Taken:</h4>
+                  <p className="text-xs">{selectedAction.actionTaken}</p>
+                </div>
+                
+                <div className="bg-muted/30 p-3 rounded-md">
+                  <h4 className="text-xs font-medium mb-1">Result:</h4>
+                  <p className="text-xs">{selectedAction.result}</p>
+                  
+                  {selectedAction.status === "pending" && (
+                    <div className="mt-2">
+                      <Progress value={getCompletionPercent(selectedAction.result)} className="h-2" />
+                    </div>
+                  )}
+                </div>
+                
+                <div className="grid grid-cols-2 gap-3 text-xs">
+                  <div>
+                    <span className="text-muted-foreground">Records affected:</span>
+                    <span className="ml-2 font-medium">{selectedAction.metadata?.correctedRecords}</span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Execution time:</span>
+                    <span className="ml-2 font-medium">{selectedAction.metadata?.executionTime}</span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Timestamp:</span>
+                    <span className="ml-2 font-medium">
+                      {new Date(selectedAction.timestamp).toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+                
+                <Separator />
+                
+                <div>
+                  <h4 className="text-xs font-medium mb-2">Timeline</h4>
+                  <ol className="relative border-l border-gray-300 dark:border-gray-600 ml-3">
+                    <li className="mb-6 ml-6">
+                      <span className="absolute flex items-center justify-center w-6 h-6 rounded-full -left-3 bg-primary text-primary-foreground text-xs">1</span>
+                      <h3 className="font-medium text-xs">Issue Detected</h3>
+                      <p className="text-xs text-muted-foreground">Data quality agent flagged the issue</p>
+                    </li>
+                    <li className="mb-6 ml-6">
+                      <span className="absolute flex items-center justify-center w-6 h-6 rounded-full -left-3 bg-primary text-primary-foreground text-xs">2</span>
+                      <h3 className="font-medium text-xs">Analysis Performed</h3>
+                      <p className="text-xs text-muted-foreground">Root cause analysis identified solution</p>
+                    </li>
+                    <li className="ml-6">
+                      <span className={`absolute flex items-center justify-center w-6 h-6 rounded-full -left-3 ${selectedAction.status === "completed" ? "bg-green-500" : selectedAction.status === "pending" ? "bg-amber-500" : "bg-red-500"} text-white text-xs`}>
+                        {selectedAction.status === "completed" ? "3" : selectedAction.status === "pending" ? "..." : "!"}
+                      </span>
+                      <h3 className="font-medium text-xs">{selectedAction.status === "completed" ? "Remediation Complete" : selectedAction.status === "pending" ? "Remediation In Progress" : "Remediation Failed"}</h3>
+                      <p className="text-xs text-muted-foreground">{selectedAction.status === "completed" ? "Action successfully completed" : selectedAction.status === "pending" ? "Action currently being executed" : "Action failed - manual intervention required"}</p>
+                    </li>
+                  </ol>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center h-full text-muted-foreground">
+                <p>Select a remediation action to view details</p>
+              </div>
+            )}
+          </div>
+        </div>
       </CardContent>
     </Card>
   );

@@ -1,7 +1,6 @@
 
 import React, { useState, useRef } from 'react';
 import { X, Maximize2, Minimize2, Move } from 'lucide-react';
-import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 import { useToast } from "@/hooks/use-toast";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { cn } from "@/lib/utils";
@@ -39,6 +38,8 @@ export const ResizableWidget: React.FC<ResizableWidgetProps> = ({
 
   const handleResizeStart = (e: React.MouseEvent) => {
     e.preventDefault();
+    e.stopPropagation();
+    
     startResizePosition.current = { x: e.clientX, y: e.clientY };
     
     if (widgetRef.current) {
@@ -75,10 +76,12 @@ export const ResizableWidget: React.FC<ResizableWidgetProps> = ({
     document.removeEventListener('mouseup', handleResizeEnd);
   };
 
-  // Handle widget selection
+  // Handle widget selection - modified to check if click was on widget-content
   const handleWidgetClick = (e: React.MouseEvent) => {
-    // Don't select if clicking on control buttons
-    if ((e.target as Element).closest('.widget-controls')) return;
+    // Don't trigger selection if clicking on widget content or control buttons
+    if ((e.target as Element).closest('.widget-content') || (e.target as Element).closest('.widget-controls')) {
+      return;
+    }
     
     // Toggle selection state
     selectWidget(selectedWidgetId === id ? null : id);
@@ -183,7 +186,7 @@ export const ResizableWidget: React.FC<ResizableWidgetProps> = ({
       
       {/* Resize handle for manual resizing */}
       <div 
-        className="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize z-20"
+        className="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize z-20 widget-controls"
         onMouseDown={handleResizeStart}
       >
         <div className="w-0 h-0 border-t-[6px] border-t-transparent border-l-[6px] border-l-transparent border-b-[6px] border-b-muted-foreground border-r-[6px] border-r-muted-foreground" />
@@ -196,14 +199,14 @@ export const ResizableWidget: React.FC<ResizableWidgetProps> = ({
       
       {/* Widget title */}
       {currentWidget && (
-        <div className="absolute top-2 left-8 text-sm font-medium">
+        <div className="absolute top-2 left-8 text-sm font-medium widget-controls">
           {currentWidget.title}
           {isSelected && <span className="ml-2 text-xs text-primary">(Selected)</span>}
         </div>
       )}
       
-      {/* Widget content */}
-      <div className="p-4 pt-10 h-full overflow-auto">
+      {/* Widget content - add widget-content class */}
+      <div className="p-4 pt-10 h-full overflow-auto widget-content">
         {children}
       </div>
 

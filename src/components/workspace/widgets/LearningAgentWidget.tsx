@@ -4,35 +4,29 @@ import { WidgetComponentProps, LearningEvent } from "@/types";
 import { useState, useEffect } from "react";
 import { messageBus } from "@/lib/messageBus";
 import { MessageTopics } from "@/lib/messageTopics";
-import { BookOpen, Database, BarChart as BarChartIcon, PieChart, Brain, Network, History } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { BookOpen, Database, BarChart2, CheckCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 import { 
   LineChart, 
   Line, 
-  BarChart, 
-  Bar, 
-  PieChart as RechartPieChart, 
-  Pie, 
-  Cell, 
   XAxis, 
   YAxis, 
   CartesianGrid, 
   Tooltip, 
-  Legend, 
-  ResponsiveContainer
+  ResponsiveContainer,
+  Legend 
 } from "recharts";
 
 export function LearningAgentWidget({ widget, onClose }: WidgetComponentProps) {
   const [learningEvents, setLearningEvents] = useState<LearningEvent[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<LearningEvent | null>(null);
   const [activeTab, setActiveTab] = useState("overview");
-  const [modelPerformance, setModelPerformance] = useState<any[]>([]);
-  const [dataSourceDistribution, setDataSourceDistribution] = useState<any[]>([]);
+  const [dataSources, setDataSources] = useState<{name: string, count: number, lastUpdated: Date}[]>([]);
+  const [metricsHistory, setMetricsHistory] = useState<any[]>([]);
 
   // Subscribe to learning events
   useEffect(() => {
@@ -49,67 +43,54 @@ export function LearningAgentWidget({ widget, onClose }: WidgetComponentProps) {
       }
     );
 
-    // Generate some initial events for demo
+    // Generate demo data
     if (learningEvents.length === 0) {
       const generateDemoData = () => {
-        // Sample learning events
+        // Generate demo learning events
         const demoEvents: LearningEvent[] = [
           {
-            id: "learn-1",
-            title: "Market Volatility Pattern Analysis",
-            description: "Training completed on historical market volatility patterns to improve risk predictions.",
-            timestamp: new Date(Date.now() - 1000 * 60 * 60),
-            dataSource: "Historical Market Data API",
-            dataPoints: 125000,
+            id: "le-1",
+            title: "Market Volatility Model Update",
+            description: "Learning agent has processed recent market volatility data to update prediction models.",
+            timestamp: new Date(Date.now() - 1000 * 60 * 30),
+            dataSource: "Market Data API",
+            dataPoints: 24560,
             learningType: "supervised",
             metrics: {
-              accuracy: 0.923,
-              precision: 0.887,
-              recall: 0.912,
-              f1Score: 0.899
+              accuracy: "0.921",
+              precision: "0.895",
+              recall: "0.887",
+              f1Score: "0.891"
             }
           },
           {
-            id: "learn-2",
-            title: "Anomaly Detection Enhancement",
-            description: "Unsupervised learning to identify novel transaction anomaly patterns.",
-            timestamp: new Date(Date.now() - 1000 * 60 * 60 * 3),
+            id: "le-2",
+            title: "Transaction Pattern Analysis",
+            description: "Unsupervised learning completed on transaction patterns to identify new clusters of behavior.",
+            timestamp: new Date(Date.now() - 1000 * 60 * 120),
             dataSource: "Transaction Database",
-            dataPoints: 78500,
+            dataPoints: 58920,
             learningType: "unsupervised",
             metrics: {
-              silhouetteScore: 0.76,
-              dbscanEpsilon: 0.12,
-              clusterCount: 6
+              accuracy: "0.843",
+              precision: "0.829",
+              recall: "0.856",
+              f1Score: "0.842"
             }
           },
           {
-            id: "learn-3",
-            title: "Risk Management Policy Optimization",
-            description: "Reinforcement learning to optimize risk threshold policies for different market conditions.",
-            timestamp: new Date(Date.now() - 1000 * 60 * 60 * 8),
-            dataSource: "Risk Management Framework",
-            dataPoints: 15800,
+            id: "le-3",
+            title: "Risk Assessment Model Training",
+            description: "Reinforcement learning model updated with feedback from risk analysts.",
+            timestamp: new Date(Date.now() - 1000 * 60 * 240),
+            dataSource: "Risk Feedback System",
+            dataPoints: 12480,
             learningType: "reinforcement",
             metrics: {
-              averageReward: 0.653,
-              policyConvergence: 0.98,
-              episodesUntilConvergence: 1250
-            }
-          },
-          {
-            id: "learn-4",
-            title: "Credit Risk Transfer Learning",
-            description: "Transfer learning applied to adapt credit risk models to new market segments.",
-            timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24),
-            dataSource: "Credit Bureau API",
-            dataPoints: 42000,
-            learningType: "supervised",
-            metrics: {
-              accuracy: 0.892,
-              precision: 0.867,
-              recall: 0.831,
-              f1Score: 0.848
+              accuracy: "0.902",
+              precision: "0.884",
+              recall: "0.893",
+              f1Score: "0.888"
             }
           }
         ];
@@ -119,25 +100,38 @@ export function LearningAgentWidget({ widget, onClose }: WidgetComponentProps) {
           setSelectedEvent(demoEvents[0]);
         }
         
-        // Model performance over time
-        const performanceData = [];
-        for (let i = 10; i >= 0; i--) {
-          performanceData.push({
-            iteration: `Iter ${10-i}`,
-            accuracy: (0.75 + (Math.random() * 0.05) + (0.15 * (10-i)/10)).toFixed(3),
-            loss: (0.5 - (Math.random() * 0.05) - (0.3 * (10-i)/10)).toFixed(3),
+        // Generate data sources
+        const demoDataSources = [
+          { name: "Market Data API", count: 24560, lastUpdated: new Date(Date.now() - 1000 * 60 * 30) },
+          { name: "Transaction Database", count: 58920, lastUpdated: new Date(Date.now() - 1000 * 60 * 120) },
+          { name: "Risk Feedback System", count: 12480, lastUpdated: new Date(Date.now() - 1000 * 60 * 240) },
+          { name: "Regulatory Filings", count: 8450, lastUpdated: new Date(Date.now() - 1000 * 60 * 360) },
+          { name: "Customer Behavior", count: 32180, lastUpdated: new Date(Date.now() - 1000 * 60 * 480) },
+        ];
+        
+        setDataSources(demoDataSources);
+        
+        // Generate metrics history
+        const now = new Date();
+        const demoMetrics = [];
+        
+        // Last 7 training runs
+        for (let i = 6; i >= 0; i--) {
+          const date = new Date(now);
+          date.setDate(date.getDate() - i);
+          
+          const baseAccuracy = 0.80 + (Math.random() * 0.02);
+          
+          demoMetrics.push({
+            date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+            accuracy: Math.min(0.99, baseAccuracy + (Math.random() * 0.05)).toFixed(3),
+            precision: Math.min(0.99, baseAccuracy - 0.01 + (Math.random() * 0.05)).toFixed(3),
+            recall: Math.min(0.99, baseAccuracy - 0.02 + (Math.random() * 0.05)).toFixed(3),
+            f1Score: Math.min(0.99, baseAccuracy - 0.01 + (Math.random() * 0.04)).toFixed(3),
           });
         }
-        setModelPerformance(performanceData);
         
-        // Data source distribution
-        setDataSourceDistribution([
-          { name: 'Market Data', value: 42 },
-          { name: 'Transaction DB', value: 28 },
-          { name: 'Credit API', value: 15 },
-          { name: 'External Feed', value: 10 },
-          { name: 'User Feedback', value: 5 }
-        ]);
+        setMetricsHistory(demoMetrics);
       };
       
       generateDemoData();
@@ -148,49 +142,209 @@ export function LearningAgentWidget({ widget, onClose }: WidgetComponentProps) {
     };
   }, []);
 
-  const getLearningTypeIcon = (type: string) => {
+  const getColorForLearningType = (type: string) => {
     switch (type) {
       case "supervised":
-        return <LineChart size={16} className="text-blue-500" />;
+        return "bg-blue-500";
       case "unsupervised":
-        return <Network size={16} className="text-purple-500" />;
+        return "bg-purple-500";
       case "reinforcement":
-        return <Brain size={16} className="text-green-500" />;
+        return "bg-emerald-500";
       default:
-        return <LineChart size={16} />;
+        return "bg-gray-500";
     }
   };
 
-  const getLearningTypeBadge = (type: string) => {
-    switch (type) {
-      case "supervised":
-        return (
-          <Badge className="bg-blue-500/80">
-            <LineChart size={12} className="mr-1" />
-            Supervised
-          </Badge>
-        );
-      case "unsupervised":
-        return (
-          <Badge className="bg-purple-500/80">
-            <Network size={12} className="mr-1" />
-            Unsupervised
-          </Badge>
-        );
-      case "reinforcement":
-        return (
-          <Badge className="bg-green-500/80">
-            <Brain size={12} className="mr-1" />
-            Reinforcement
-          </Badge>
-        );
-      default:
-        return <Badge variant="outline">Unknown</Badge>;
-    }
-  };
+  const renderOverviewTab = () => (
+    <div className="space-y-4">
+      {selectedEvent ? (
+        <>
+          <div className="bg-muted/40 p-3 rounded-md">
+            <h3 className="text-sm font-medium mb-1">{selectedEvent.title}</h3>
+            <p className="text-xs text-muted-foreground">{selectedEvent.description}</p>
+            <div className="flex items-center justify-between mt-2">
+              <Badge 
+                variant="outline" 
+                className={`${getColorForLearningType(selectedEvent.learningType)} text-white`}
+              >
+                {selectedEvent.learningType}
+              </Badge>
+              <span className="text-xs text-muted-foreground">
+                {formatDistanceToNow(new Date(selectedEvent.timestamp), { addSuffix: true })}
+              </span>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-muted/30 p-3 rounded-md">
+              <h4 className="text-xs font-medium mb-2">Data Source</h4>
+              <p className="text-sm">{selectedEvent.dataSource}</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {selectedEvent.dataPoints.toLocaleString()} data points processed
+              </p>
+            </div>
+            
+            <div className="bg-muted/30 p-3 rounded-md">
+              <h4 className="text-xs font-medium mb-2">Model Performance</h4>
+              <div className="grid grid-cols-2 gap-1 text-xs">
+                <div>Accuracy: <span className="font-mono">{selectedEvent.metrics.accuracy}</span></div>
+                <div>Precision: <span className="font-mono">{selectedEvent.metrics.precision}</span></div>
+                <div>Recall: <span className="font-mono">{selectedEvent.metrics.recall}</span></div>
+                <div>F1 Score: <span className="font-mono">{selectedEvent.metrics.f1Score}</span></div>
+              </div>
+            </div>
+          </div>
+          
+          <div>
+            <h4 className="text-xs font-medium mb-2">Learning Process</h4>
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-dashed border-muted-foreground/30"></div>
+              </div>
+              <div className="relative flex justify-between">
+                <div className="flex flex-col items-center">
+                  <div className="bg-background border rounded-full w-6 h-6 flex items-center justify-center text-xs">1</div>
+                  <span className="text-xs mt-1">Data Collection</span>
+                </div>
+                <div className="flex flex-col items-center">
+                  <div className="bg-background border rounded-full w-6 h-6 flex items-center justify-center text-xs">2</div>
+                  <span className="text-xs mt-1">Preprocessing</span>
+                </div>
+                <div className="flex flex-col items-center">
+                  <div className="bg-background border rounded-full w-6 h-6 flex items-center justify-center text-xs">3</div>
+                  <span className="text-xs mt-1">Model Training</span>
+                </div>
+                <div className="flex flex-col items-center">
+                  <div className="bg-background border border-primary rounded-full w-6 h-6 flex items-center justify-center text-xs text-primary">4</div>
+                  <span className="text-xs mt-1">Validation</span>
+                </div>
+                <div className="flex flex-col items-center">
+                  <div className="bg-background border rounded-full w-6 h-6 flex items-center justify-center text-xs">5</div>
+                  <span className="text-xs mt-1">Deployment</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      ) : (
+        <div className="flex items-center justify-center h-40 text-muted-foreground">
+          <p>Select a learning event to view details</p>
+        </div>
+      )}
+    </div>
+  );
 
-  // Colors for pie chart
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
+  const renderDataSourcesTab = () => (
+    <div className="space-y-4">
+      <div className="bg-muted/40 p-3 rounded-md">
+        <h3 className="text-sm font-medium">Data Sources Overview</h3>
+        <p className="text-xs text-muted-foreground mt-1">The learning agent integrates data from multiple sources to build comprehensive models.</p>
+      </div>
+      
+      <ScrollArea className="h-[200px]">
+        <table className="w-full text-sm">
+          <thead className="text-xs text-muted-foreground">
+            <tr>
+              <th className="text-left p-2">Source Name</th>
+              <th className="text-right p-2">Data Points</th>
+              <th className="text-right p-2">Last Updated</th>
+            </tr>
+          </thead>
+          <tbody>
+            {dataSources.map((source) => (
+              <tr key={source.name} className="hover:bg-muted/30">
+                <td className="p-2">{source.name}</td>
+                <td className="text-right p-2">{source.count.toLocaleString()}</td>
+                <td className="text-right p-2 whitespace-nowrap">
+                  {formatDistanceToNow(source.lastUpdated, { addSuffix: true })}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </ScrollArea>
+      
+      <div>
+        <h4 className="text-xs font-medium mb-2">Data Integration Architecture</h4>
+        <div className="p-2 bg-muted/30 rounded-md text-xs">
+          <div className="flex flex-col">
+            <div className="flex justify-between border-b border-border pb-2">
+              <div className="flex items-center gap-2">
+                <Database size={14} className="text-blue-500" />
+                <span>External APIs</span>
+              </div>
+              <span className="text-muted-foreground">3 sources</span>
+            </div>
+            <div className="flex justify-between border-b border-border py-2">
+              <div className="flex items-center gap-2">
+                <Database size={14} className="text-purple-500" />
+                <span>Internal Databases</span>
+              </div>
+              <span className="text-muted-foreground">5 sources</span>
+            </div>
+            <div className="flex justify-between border-b border-border py-2">
+              <div className="flex items-center gap-2">
+                <Database size={14} className="text-emerald-500" />
+                <span>Real-time Feeds</span>
+              </div>
+              <span className="text-muted-foreground">2 sources</span>
+            </div>
+            <div className="flex justify-between pt-2">
+              <div className="flex items-center gap-2">
+                <Database size={14} className="text-amber-500" />
+                <span>Batch Processes</span>
+              </div>
+              <span className="text-muted-foreground">4 sources</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderMetricsTab = () => (
+    <div className="space-y-4">
+      <div className="bg-muted/40 p-3 rounded-md">
+        <h3 className="text-sm font-medium">Performance Metrics</h3>
+        <p className="text-xs text-muted-foreground mt-1">Tracking the learning agent's performance over time.</p>
+      </div>
+      
+      <div>
+        <h4 className="text-xs font-medium mb-2">Metrics Over Time</h4>
+        <div className="h-[180px] w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={metricsHistory}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} />
+              <XAxis dataKey="date" tick={{ fontSize: 10 }} />
+              <YAxis domain={[0.7, 1]} tick={{ fontSize: 10 }} />
+              <Tooltip contentStyle={{ fontSize: '12px' }} />
+              <Legend wrapperStyle={{ fontSize: '10px' }} />
+              <Line type="monotone" dataKey="accuracy" stroke="#3b82f6" dot={{ r: 2 }} />
+              <Line type="monotone" dataKey="precision" stroke="#10b981" dot={{ r: 2 }} />
+              <Line type="monotone" dataKey="recall" stroke="#f59e0b" dot={{ r: 2 }} />
+              <Line type="monotone" dataKey="f1Score" stroke="#8b5cf6" dot={{ r: 2 }} />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-2 gap-3">
+        <div className="bg-muted/30 p-3 rounded-md">
+          <h4 className="text-xs font-medium mb-1">Current Model Status</h4>
+          <div className="flex items-center gap-2 mt-2">
+            <CheckCircle size={16} className="text-green-500" />
+            <span className="text-sm">Operational</span>
+          </div>
+          <p className="text-xs text-muted-foreground mt-1">Last evaluated 2 hours ago</p>
+        </div>
+        <div className="bg-muted/30 p-3 rounded-md">
+          <h4 className="text-xs font-medium mb-1">Next Training Run</h4>
+          <div className="text-sm mt-2">Scheduled in 4 hours</div>
+          <p className="text-xs text-muted-foreground mt-1">Expected data points: ~15,000</p>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <Card className="w-full h-full">
@@ -200,215 +354,60 @@ export function LearningAgentWidget({ widget, onClose }: WidgetComponentProps) {
           {widget.title}
         </CardTitle>
         <CardDescription>
-          Transparency into AI learning processes and data sources
+          Insights into the AI learning process and data sources
         </CardDescription>
       </CardHeader>
       <CardContent className="p-0">
-        <div className="flex flex-col md:flex-row h-full">
+        <div className="flex flex-col md:flex-row h-[calc(100%-1rem)]">
           {/* Left column - List of learning events */}
           <div className="w-full md:w-1/3 border-r">
             <ScrollArea className="h-[300px]">
-              <div className="py-1">
+              <div className="p-3 space-y-1">
                 {learningEvents.map(event => (
-                  <button
+                  <Button
                     key={event.id}
-                    className={`w-full text-left px-4 py-3 hover:bg-muted/50 transition-colors flex items-start gap-3 ${
-                      selectedEvent?.id === event.id ? 'bg-muted/70' : ''
-                    }`}
+                    variant={selectedEvent?.id === event.id ? "secondary" : "ghost"}
+                    className="w-full justify-start text-left h-auto py-2"
                     onClick={() => setSelectedEvent(event)}
                   >
-                    <div className="mt-0.5">{getLearningTypeIcon(event.learningType)}</div>
-                    <div className="flex-1">
-                      <h4 className="text-xs font-medium">{event.title}</h4>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {formatDistanceToNow(new Date(event.timestamp), { addSuffix: true })}
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {Number(event.dataPoints).toLocaleString()} data points
-                      </p>
+                    <div className="flex items-start gap-2">
+                      <div className={`mt-0.5 w-2 h-2 rounded-full ${getColorForLearningType(event.learningType)}`} />
+                      <div className="flex-1 overflow-hidden">
+                        <h4 className="text-xs font-medium truncate">{event.title}</h4>
+                        <p className="text-xs text-muted-foreground truncate">
+                          {formatDistanceToNow(new Date(event.timestamp), { addSuffix: true })}
+                        </p>
+                      </div>
                     </div>
-                  </button>
+                  </Button>
                 ))}
               </div>
             </ScrollArea>
           </div>
           
-          {/* Right column - Selected event details with tabs */}
-          <div className="w-full md:w-2/3">
-            {selectedEvent ? (
-              <div>
-                <div className="p-4 border-b">
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="font-medium">{selectedEvent.title}</h3>
-                    {getLearningTypeBadge(selectedEvent.learningType)}
-                  </div>
-                  <p className="text-sm text-muted-foreground">{selectedEvent.description}</p>
-                </div>
+          {/* Right column - Learning details with tabs */}
+          <div className="w-full md:w-2/3 p-4">
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <TabsList className="w-full">
+                <TabsTrigger value="overview" className="flex-1 text-xs">Overview</TabsTrigger>
+                <TabsTrigger value="datasources" className="flex-1 text-xs">Data Sources</TabsTrigger>
+                <TabsTrigger value="metrics" className="flex-1 text-xs">Metrics</TabsTrigger>
+              </TabsList>
+              
+              <div className="mt-4">
+                <TabsContent value="overview" className="m-0">
+                  {renderOverviewTab()}
+                </TabsContent>
                 
-                <Tabs defaultValue="overview" className="w-full" value={activeTab} onValueChange={setActiveTab}>
-                  <div className="px-4 pt-2">
-                    <TabsList className="grid grid-cols-3">
-                      <TabsTrigger value="overview">Overview</TabsTrigger>
-                      <TabsTrigger value="data">Data Sources</TabsTrigger>
-                      <TabsTrigger value="metrics">Metrics</TabsTrigger>
-                    </TabsList>
-                  </div>
-                  
-                  <TabsContent value="overview" className="p-4 space-y-4">
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="space-y-1">
-                        <p className="text-xs text-muted-foreground">Learning Type</p>
-                        <p className="text-sm font-medium capitalize">{selectedEvent.learningType}</p>
-                      </div>
-                      <div className="space-y-1">
-                        <p className="text-xs text-muted-foreground">Data Source</p>
-                        <p className="text-sm font-medium">{selectedEvent.dataSource}</p>
-                      </div>
-                      <div className="space-y-1">
-                        <p className="text-xs text-muted-foreground">Data Points</p>
-                        <p className="text-sm font-medium">{Number(selectedEvent.dataPoints).toLocaleString()}</p>
-                      </div>
-                      <div className="space-y-1">
-                        <p className="text-xs text-muted-foreground">Processed</p>
-                        <p className="text-sm font-medium">
-                          {formatDistanceToNow(new Date(selectedEvent.timestamp), { addSuffix: true })}
-                        </p>
-                      </div>
-                    </div>
-                    
-                    <Separator />
-                    
-                    {selectedEvent.learningType === "supervised" && (
-                      <div className="space-y-3">
-                        <div className="space-y-2">
-                          <div className="flex justify-between">
-                            <p className="text-xs font-medium">Accuracy</p>
-                            <p className="text-xs">{(Number(selectedEvent.metrics?.accuracy) * 100).toFixed(1)}%</p>
-                          </div>
-                          <Progress value={Number(selectedEvent.metrics?.accuracy) * 100} className="h-1" />
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <div className="flex justify-between">
-                            <p className="text-xs font-medium">Precision</p>
-                            <p className="text-xs">{(Number(selectedEvent.metrics?.precision) * 100).toFixed(1)}%</p>
-                          </div>
-                          <Progress value={Number(selectedEvent.metrics?.precision) * 100} className="h-1" />
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <div className="flex justify-between">
-                            <p className="text-xs font-medium">Recall</p>
-                            <p className="text-xs">{(Number(selectedEvent.metrics?.recall) * 100).toFixed(1)}%</p>
-                          </div>
-                          <Progress value={Number(selectedEvent.metrics?.recall) * 100} className="h-1" />
-                        </div>
-                      </div>
-                    )}
-                    
-                    {selectedEvent.learningType === "unsupervised" && (
-                      <div className="space-y-3">
-                        <div className="grid grid-cols-2 gap-2">
-                          <div className="p-2 border rounded-md">
-                            <p className="text-xs text-muted-foreground">Silhouette Score</p>
-                            <p className="text-sm font-medium">{selectedEvent.metrics?.silhouetteScore}</p>
-                          </div>
-                          <div className="p-2 border rounded-md">
-                            <p className="text-xs text-muted-foreground">Cluster Count</p>
-                            <p className="text-sm font-medium">{selectedEvent.metrics?.clusterCount}</p>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                    
-                    {selectedEvent.learningType === "reinforcement" && (
-                      <div className="space-y-3">
-                        <div className="grid grid-cols-2 gap-2">
-                          <div className="p-2 border rounded-md">
-                            <p className="text-xs text-muted-foreground">Average Reward</p>
-                            <p className="text-sm font-medium">{selectedEvent.metrics?.averageReward}</p>
-                          </div>
-                          <div className="p-2 border rounded-md">
-                            <p className="text-xs text-muted-foreground">Policy Convergence</p>
-                            <p className="text-sm font-medium">{selectedEvent.metrics?.policyConvergence}</p>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </TabsContent>
-                  
-                  <TabsContent value="data" className="px-4 pt-2 pb-4 space-y-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Database size={14} />
-                      <h4 className="text-sm font-medium">Data Source Distribution</h4>
-                    </div>
-                    
-                    <div className="h-[200px]">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <RechartPieChart>
-                          <Pie
-                            data={dataSourceDistribution}
-                            cx="50%"
-                            cy="50%"
-                            labelLine={false}
-                            outerRadius={80}
-                            fill="#8884d8"
-                            dataKey="value"
-                            label={({name, percent}) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                          >
-                            {dataSourceDistribution.map((entry, index) => (
-                              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                            ))}
-                          </Pie>
-                          <Tooltip />
-                        </RechartPieChart>
-                      </ResponsiveContainer>
-                    </div>
-                    
-                    <div className="text-xs text-muted-foreground">
-                      <p>Learning uses multiple data sources to provide comprehensive insights.</p>
-                      <ul className="list-disc pl-4 mt-2">
-                        <li>Main source: {selectedEvent.dataSource}</li>
-                        <li>Total data points: {Number(selectedEvent.dataPoints).toLocaleString()}</li>
-                      </ul>
-                    </div>
-                  </TabsContent>
-                  
-                  <TabsContent value="metrics" className="px-4 pt-2 pb-4 space-y-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <History size={14} />
-                      <h4 className="text-sm font-medium">Model Performance Over Time</h4>
-                    </div>
-                    
-                    <div className="h-[200px]">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <LineChart
-                          data={modelPerformance}
-                          margin={{ top: 5, right: 5, left: 0, bottom: 5 }}
-                        >
-                          <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                          <XAxis dataKey="iteration" tick={{ fontSize: 10 }} />
-                          <YAxis tick={{ fontSize: 10 }} />
-                          <Tooltip contentStyle={{ fontSize: '12px' }} />
-                          <Legend />
-                          <Line type="monotone" dataKey="accuracy" stroke="#8884d8" activeDot={{ r: 6 }} strokeWidth={2} />
-                          <Line type="monotone" dataKey="loss" stroke="#82ca9d" strokeWidth={2} />
-                        </LineChart>
-                      </ResponsiveContainer>
-                    </div>
-                    
-                    <div className="text-xs text-muted-foreground">
-                      <p>This chart shows how the model's performance has improved over training iterations.</p>
-                    </div>
-                  </TabsContent>
-                </Tabs>
+                <TabsContent value="datasources" className="m-0">
+                  {renderDataSourcesTab()}
+                </TabsContent>
+                
+                <TabsContent value="metrics" className="m-0">
+                  {renderMetricsTab()}
+                </TabsContent>
               </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center h-full p-6 text-muted-foreground">
-                <BookOpen size={24} className="mb-2 opacity-50" />
-                <p>Select a learning event to view details</p>
-              </div>
-            )}
+            </Tabs>
           </div>
         </div>
       </CardContent>

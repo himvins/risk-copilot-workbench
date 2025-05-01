@@ -2,11 +2,11 @@
 import { v4 as uuidv4 } from "uuid";
 import { messageBus } from "./messageBus";
 import { MessageTopics } from "./messageTopics";
-import type { Notification, NotificationType, AgentInsight, RemediationAction, LearningEvent } from "@/types";
+import type { Notification as AppNotification, NotificationType, AgentInsight, RemediationAction, LearningEvent } from "@/types";
 import { toast } from "@/hooks/use-toast";
 
 // Store notifications
-let notifications: Notification[] = [];
+let notifications: AppNotification[] = [];
 
 // Check if browser notifications are supported
 const isBrowserNotificationSupported = () => {
@@ -66,8 +66,8 @@ const showBrowserNotification = (title: string, body: string, data?: any): void 
 };
 
 // Add a new notification and show browser notification
-const addNotification = (title: string, body: string, type: NotificationType, data?: any): Notification => {
-  const notification: Notification = {
+const addNotification = (title: string, body: string, type: NotificationType, data?: any): AppNotification => {
+  const notification: AppNotification = {
     id: uuidv4(),
     title,
     body,
@@ -97,10 +97,12 @@ const markNotificationAsRead = (id: string): void => {
   notifications = notifications.map(notification => 
     notification.id === id ? { ...notification, read: true } : notification
   );
+  
+  messageBus.publish(MessageTopics.NOTIFICATION.NEW_NOTIFICATION, notifications);
 };
 
 // Get all notifications
-const getAllNotifications = (): Notification[] => {
+const getAllNotifications = (): AppNotification[] => {
   return notifications;
 };
 
@@ -112,6 +114,7 @@ const getUnreadCount = (): number => {
 // Clear all notifications
 const clearAllNotifications = (): void => {
   notifications = [];
+  messageBus.publish(MessageTopics.NOTIFICATION.NEW_NOTIFICATION, notifications);
 };
 
 // Simulate Data Quality insights
