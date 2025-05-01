@@ -6,7 +6,7 @@ import { useState, useEffect } from "react";
 import { messageBus } from "@/lib/messageBus";
 import { MessageTopics } from "@/lib/messageTopics";
 import { formatDistanceToNow } from "date-fns";
-import { AlertTriangle, CheckCircle, XCircle, AlertCircle, FileChart, ChevronRight } from "lucide-react";
+import { AlertTriangle, CheckCircle, XCircle, AlertCircle, FileBarChart, ChevronRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
@@ -148,7 +148,7 @@ export function DataQualityInsightsWidget({ widget, onClose }: WidgetComponentPr
     <Card className="w-full h-full">
       <CardHeader className="pb-2">
         <CardTitle className="text-lg flex items-center gap-2">
-          <FileChart className="h-5 w-5" />
+          <FileBarChart className="h-5 w-5" />
           {widget.title}
         </CardTitle>
         <CardDescription>

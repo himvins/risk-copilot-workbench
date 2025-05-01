@@ -2,7 +2,7 @@
 import { v4 as uuidv4 } from "uuid";
 import { messageBus } from "./messageBus";
 import { MessageTopics } from "./messageTopics";
-import { Notification, NotificationType, AgentInsight, RemediationAction, LearningEvent } from "@/types";
+import type { Notification, NotificationType, AgentInsight, RemediationAction, LearningEvent } from "@/types";
 import { toast } from "@/hooks/use-toast";
 
 // Store notifications

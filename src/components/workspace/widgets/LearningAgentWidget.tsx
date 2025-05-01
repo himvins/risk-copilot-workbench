@@ -4,7 +4,7 @@ import { WidgetComponentProps, LearningEvent } from "@/types";
 import { useState, useEffect } from "react";
 import { messageBus } from "@/lib/messageBus";
 import { MessageTopics } from "@/lib/messageTopics";
-import { BookOpen, Database, LineChart, BarChart as BarChartIcon, PieChart, Brain, Network, History } from "lucide-react";
+import { BookOpen, Database, BarChart as BarChartIcon, PieChart, Brain, Network, History } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
