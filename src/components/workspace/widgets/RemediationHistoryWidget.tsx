@@ -33,12 +33,9 @@ export function RemediationHistoryWidget({ widget, onClose }: WidgetComponentPro
         });
         
         // Auto-select the new action if it's the first or if there's no selection
-        setRemediationActions(prevActions => {
-          if (prevActions.length === 0 || !selectedAction) {
-            setSelectedAction(action);
-          }
-          return prevActions;
-        });
+        if (remediationActions.length === 0 || !selectedAction) {
+          setSelectedAction(action);
+        }
       }
     );
 
@@ -285,7 +282,7 @@ export function RemediationHistoryWidget({ widget, onClose }: WidgetComponentPro
           <div className="w-full md:w-1/3 border-r">
             <div className="p-2 border-b">
               <Tabs 
-                defaultValue={filter} 
+                value={filter} 
                 onValueChange={(value) => setFilter(value as "all" | "completed" | "pending" | "failed")}
                 className="w-full"
               >
@@ -332,7 +329,7 @@ export function RemediationHistoryWidget({ widget, onClose }: WidgetComponentPro
           {/* Right column - Remediation action details */}
           <div className="w-full md:w-2/3">
             <Tabs 
-              defaultValue={activeDetailsTab} 
+              value={activeDetailsTab} 
               onValueChange={(value) => setActiveDetailsTab(value)}
               className="w-full"
             >

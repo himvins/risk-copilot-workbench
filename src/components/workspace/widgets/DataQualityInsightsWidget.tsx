@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { WidgetComponentProps, AgentInsight } from "@/types";
@@ -480,8 +481,9 @@ export function DataQualityInsightsWidget({ widget, onClose }: WidgetComponentPr
                 </Alert>
                 
                 <Tabs 
-                  defaultValue={activeTab} 
+                  value={activeTab} 
                   onValueChange={(value) => setActiveTab(value as "details" | "actions")}
+                  className="w-full"
                 >
                   <TabsList className="grid w-full grid-cols-2">
                     <TabsTrigger value="details">Issue Details</TabsTrigger>
