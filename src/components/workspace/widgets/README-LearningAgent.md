@@ -1,55 +1,77 @@
 
 # Learning Agent Widget
 
-## Overview
-The Learning Agent Widget provides transparency into the AI learning processes that power the risk management system. It visualizes what data the system is learning from, how it's learning, and the performance metrics of the learning models, making AI decision-making more transparent and explainable.
+The Learning Agent widget provides insights into the AI agent's learning process, data sources, and model performance. This widget is designed to provide transparency into how the AI makes decisions and what data it uses.
 
-## Features
+## Key Features
 
-### Learning Activity Monitoring
-- Tracks all learning events and model updates
-- Shows data sources being used for learning
-- Displays learning types (supervised, unsupervised, reinforcement)
-- Visualizes learning progress over time
+### Validation Rules
+The widget displays a table of validation rules used by the learning agent to evaluate data quality:
+- Rule ID: Unique identifier for each rule
+- Type: Classification of rule (e.g., Interest Rate, CSA Terms, Trade)
+- Data Element: The specific data field being validated
+- Rule Description: Detailed explanation of what the rule checks for
+- Threshold: Numerical threshold for rules that use one
+- Scope of checks: Where and when the rule is applied
+- Severity: Impact level if rule is violated (Critical, High, Medium, Low)
+
+### Quality Rules
+The widget shows predefined quality rules categorized by data domain:
+
+1. **Interest Rates Rules**:
+   - IR014: Flag negative values for FwdRate
+   - IR015: Check for spikes in FwdRate across different Tenors
+   - IR016: Check if FwdRate for longer tenors is lower than shorter tenors
+   - IR017: Check for duplicate entries
+   - IR018: Ensure standard tenors have FwdRate values
+
+2. **CSA Terms Rules**:
+   - CSA027: Flag contractual inconsistencies
+   - CSA028: Check threshold amount relationships
+   - CSA029: Validate minimum transfer amounts
+   - CSA030: Check for consistent independent amounts
+   - CSA031: Validate IM CSA types
+   - CSA032: Verify margin frequency settings
+
+3. **Trades Rules**:
+   - TRD026: Flag trades with contractual netting issues
+   - TRD027: Check for missing ratings
+   - TRD028: Validate CVA and DVA relationships
+   - TRD029: Verify agreement IDs
+   - TRD030-031: Check value consistency rules
+
+### Contextual Rules
+Rules that consider broader context and relationships:
+
+1. **Interest Rates Contextual Rules**:
+   - IR019-022: Data completeness, significant changes, outliers, and timeliness
+
+2. **CSA Terms Contextual Rules**:
+   - CSA033-035: Completeness, change tracking, and frequency adherence
+
+3. **Trades Contextual Rules**:
+   - TRD032-041: Missing data, significant changes, outliers, timeliness, rating changes, and data consistency
+
+### Learning Process Visualization
+The widget visualizes how the agent learns over time, showing:
+- Data collection processes
+- Model training metrics
+- Performance improvements
+- Learning sources
 
 ### Model Performance Metrics
-- Accuracy, precision, recall, and F1 score tracking
-- Performance trend visualization over time
-- Comparison between model versions
-- Confidence intervals and uncertainty measures
+The widget displays key model performance indicators:
+- Accuracy
+- Precision
+- Recall
+- F1 Score
 
-### Data Source Transparency
-- Lists all data sources used for model training
-- Shows volume of data points processed
-- Indicates data freshness and update frequency
-- Highlights key features used in models
+## Workflow
+1. Agent continuously monitors data streams
+2. Rules are applied to incoming data
+3. Anomalies or issues are flagged
+4. Learning process updates models based on new data
+5. Performance metrics are updated
+6. Users can review the learning process and understand why decisions are made
 
-### Learning Insights
-- Explains what patterns the AI has identified
-- Shows how new knowledge is incorporated into models
-- Visualizes key relationships discovered in data
-- Highlights anomalies and outliers identified during learning
-
-### Interactive Interface
-- Tab-based navigation between different aspects (overview, data sources, metrics)
-- Interactive charts for exploring performance metrics
-- Timeline of learning events
-- Detailed view of individual learning events
-
-## Technical Implementation
-- Subscribes to learning events through the message bus
-- Uses recharts to visualize performance metrics and trends
-- Implements tabbed interface for different aspects of learning
-- Provides detailed view for specific learning events
-
-## Integration with Other Components
-- Receives data from the Learning Agent through the message bus
-- Connects learning events with related data quality insights
-- Shows how learning improves the system's ability to detect issues
-
-## User Workflow
-1. User receives notification about a completed learning event
-2. User clicks on the notification, which adds this widget to the workspace
-3. User can examine what the system has learned and from what data
-4. User can verify model performance metrics
-5. User can gain confidence in the AI's decision-making process through transparency
+This widget provides transparency into the AI's decision-making process, helping users understand how and why certain alerts are triggered.

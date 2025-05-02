@@ -1,347 +1,112 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { WidgetComponentProps, LearningEvent } from "@/types";
-import { useState, useEffect } from "react";
-import { messageBus } from "@/lib/messageBus";
-import { MessageTopics } from "@/lib/messageTopics";
-import { formatDistanceToNow } from "date-fns";
-import { BookOpen, Database, BarChart2, CheckCircle } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { WidgetComponentProps } from "@/types";
+import { useState } from "react";
+import { BookOpen, AlertTriangle, CheckCircle } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { 
-  LineChart, 
-  Line, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  ResponsiveContainer,
-  Legend 
-} from "recharts";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
 
 export function LearningAgentWidget({ widget, onClose }: WidgetComponentProps) {
-  const [learningEvents, setLearningEvents] = useState<LearningEvent[]>([]);
-  const [selectedEvent, setSelectedEvent] = useState<LearningEvent | null>(null);
-  const [activeTab, setActiveTab] = useState("overview");
-  const [dataSources, setDataSources] = useState<{name: string, count: number, lastUpdated: Date}[]>([]);
-  const [metricsHistory, setMetricsHistory] = useState<any[]>([]);
+  const [activeTab, setActiveTab] = useState("validation-rules");
 
-  // Subscribe to learning events
-  useEffect(() => {
-    const subscription = messageBus.subscribe(
-      MessageTopics.AGENT.LEARNING_UPDATE,
-      (event: LearningEvent) => {
-        setLearningEvents(prev => {
-          // Don't add duplicates
-          if (prev.some(e => e.id === event.id)) {
-            return prev;
-          }
-          return [event, ...prev];
-        });
-      }
-    );
+  // Sample validation rules
+  const validationRules = [
+    { id: "IR014", type: "Interest Rate", dataElement: "FwdRate", description: "Flag negative values for FwdRate", threshold: "0", scope: "All non-basis curves", severity: "Critical" },
+    { id: "IR015", type: "Interest Rate", dataElement: "FwdRate", description: "Check for spikes across different Tenors", threshold: "Std Dev > 3", scope: "All curves", severity: "Medium" },
+    { id: "IR016", type: "Interest Rate", dataElement: "FwdRate", description: "Check if longer tenor rates lower than shorter", threshold: "N/A", scope: "Normal yield curves", severity: "Medium" },
+    { id: "IR017", type: "Interest Rate", dataElement: "Records", description: "Check for duplicate entries", threshold: "N/A", scope: "All curves", severity: "High" },
+    { id: "IR018", type: "Interest Rate", dataElement: "Tenors", description: "Ensure standard tenors have FwdRate", threshold: "N/A", scope: "Standard tenors", severity: "High" },
+    { id: "CSA027", type: "CSA Terms", dataElement: "ContractualCsa", description: "Flag if ContractualCsa is true, but legal opinions false", threshold: "N/A", scope: "All CSAs", severity: "High" },
+    { id: "CSA028", type: "CSA Terms", dataElement: "ThresholdAmount", description: "Check if CptyThreshold > WfcThreshold", threshold: "N/A", scope: "All CSAs", severity: "Medium" },
+    { id: "TRD026", type: "Trade", dataElement: "ContractualNetting", description: "Flag trades where netting enforceability is false", threshold: "N/A", scope: "All trades", severity: "High" },
+    { id: "TRD027", type: "Trade", dataElement: "Ratings", description: "Check for missing Rating1 or Rating2 values", threshold: "N/A", scope: "All trades", severity: "Medium" },
+    { id: "TRD028", type: "Trade", dataElement: "CVA/DVA", description: "Check if CVA and DVA have opposite signs", threshold: "N/A", scope: "All trades", severity: "Medium" },
+  ];
 
-    // Generate demo data
-    if (learningEvents.length === 0) {
-      const generateDemoData = () => {
-        // Generate demo learning events
-        const demoEvents: LearningEvent[] = [
-          {
-            id: "le-1",
-            title: "Market Volatility Model Update",
-            description: "Learning agent has processed recent market volatility data to update prediction models.",
-            timestamp: new Date(Date.now() - 1000 * 60 * 30),
-            dataSource: "Market Data API",
-            dataPoints: 24560,
-            learningType: "supervised",
-            metrics: {
-              accuracy: "0.921",
-              precision: "0.895",
-              recall: "0.887",
-              f1Score: "0.891"
-            }
-          },
-          {
-            id: "le-2",
-            title: "Transaction Pattern Analysis",
-            description: "Unsupervised learning completed on transaction patterns to identify new clusters of behavior.",
-            timestamp: new Date(Date.now() - 1000 * 60 * 120),
-            dataSource: "Transaction Database",
-            dataPoints: 58920,
-            learningType: "unsupervised",
-            metrics: {
-              accuracy: "0.843",
-              precision: "0.829",
-              recall: "0.856",
-              f1Score: "0.842"
-            }
-          },
-          {
-            id: "le-3",
-            title: "Risk Assessment Model Training",
-            description: "Reinforcement learning model updated with feedback from risk analysts.",
-            timestamp: new Date(Date.now() - 1000 * 60 * 240),
-            dataSource: "Risk Feedback System",
-            dataPoints: 12480,
-            learningType: "reinforcement",
-            metrics: {
-              accuracy: "0.902",
-              precision: "0.884",
-              recall: "0.893",
-              f1Score: "0.888"
-            }
-          }
-        ];
-        
-        setLearningEvents(demoEvents);
-        if (demoEvents.length > 0) {
-          setSelectedEvent(demoEvents[0]);
-        }
-        
-        // Generate data sources
-        const demoDataSources = [
-          { name: "Market Data API", count: 24560, lastUpdated: new Date(Date.now() - 1000 * 60 * 30) },
-          { name: "Transaction Database", count: 58920, lastUpdated: new Date(Date.now() - 1000 * 60 * 120) },
-          { name: "Risk Feedback System", count: 12480, lastUpdated: new Date(Date.now() - 1000 * 60 * 240) },
-          { name: "Regulatory Filings", count: 8450, lastUpdated: new Date(Date.now() - 1000 * 60 * 360) },
-          { name: "Customer Behavior", count: 32180, lastUpdated: new Date(Date.now() - 1000 * 60 * 480) },
-        ];
-        
-        setDataSources(demoDataSources);
-        
-        // Generate metrics history
-        const now = new Date();
-        const demoMetrics = [];
-        
-        // Last 7 training runs
-        for (let i = 6; i >= 0; i--) {
-          const date = new Date(now);
-          date.setDate(date.getDate() - i);
-          
-          const baseAccuracy = 0.80 + (Math.random() * 0.02);
-          
-          demoMetrics.push({
-            date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-            accuracy: Math.min(0.99, baseAccuracy + (Math.random() * 0.05)).toFixed(3),
-            precision: Math.min(0.99, baseAccuracy - 0.01 + (Math.random() * 0.05)).toFixed(3),
-            recall: Math.min(0.99, baseAccuracy - 0.02 + (Math.random() * 0.05)).toFixed(3),
-            f1Score: Math.min(0.99, baseAccuracy - 0.01 + (Math.random() * 0.04)).toFixed(3),
-          });
-        }
-        
-        setMetricsHistory(demoMetrics);
-      };
-      
-      generateDemoData();
-    }
+  // Group quality rules by category
+  const qualityRules = {
+    interestRates: [
+      { id: "IR014", description: "Flag negative values for FwdRate, as interest rates should be non-negative unless they are basis curves like BRL_BasisFX_SOFR.", severity: "Critical" },
+      { id: "IR015", description: "Check for spikes in FwdRate for a given Ccy and Name across different Tenors.", severity: "Medium" },
+      { id: "IR016", description: "Check if the FwdRate for longer tenors is lower than shorter tenors, which is not expected in a normal yield curve.", severity: "Medium" },
+      { id: "IR017", description: "Check for duplicate entries with the same asOfDate, Ccy, Name and Tenor.", severity: "High" },
+      { id: "IR018", description: "Ensure that for standard tenors (e.g., 1M, 3M, 6M, 1Y, etc.) the FwdRate exists.", severity: "High" }
+    ],
+    csaTerms: [
+      { id: "CSA027", description: "Flag if ContractualCsa is true, but CsaLegalOpinion and CsaEnforceability are false.", severity: "High" },
+      { id: "CSA028", description: "Check if CptyThresholdAmount is greater than WfcThresholdAmount.", severity: "Medium" },
+      { id: "CSA029", description: "Check if CptyMinimumTransferAmount or WfcMinimumTransferAmount is zero when MarginFrequency is Daily, Weekly, or Monthly.", severity: "Medium" },
+      { id: "CSA030", description: "Check for inconsistencies in CptyIndependentAmount and WfcIndependentAmount. They should be of the same sign.", severity: "Medium" },
+      { id: "CSA031", description: "If CsaType is IM, then CptyIndependentAmount and WfcIndependentAmount should not be zero.", severity: "High" },
+      { id: "CSA032", description: "If MarginFrequency is \"Never\", then all threshold and transfer amounts should be very high.", severity: "High" }
+    ],
+    trades: [
+      { id: "TRD026", description: "Flag trades where ContractualNetting is true, but NettingEnforceability and CloseoutNetLegOpin are false.", severity: "High" },
+      { id: "TRD027", description: "Check for missing Rating1 or Rating2 values.", severity: "Medium" },
+      { id: "TRD028", description: "Check if CVA and DVA have opposite signs.", severity: "Medium" },
+      { id: "TRD029", description: "Check if AgreementID is 'NA' when ContractualNetting is true.", severity: "High" },
+      { id: "TRD030", description: "Check if portfolioValue is zero while CVA and DVA are non-zero.", severity: "Medium" },
+      { id: "TRD031", description: "Check if CVA, DVA, fca, fba, fva are zero when portfolioValue is zero.", severity: "Medium" }
+    ]
+  };
 
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
+  // Contextual rules
+  const contextualRules = {
+    interestRates: [
+      { id: "IR019", description: "Alert if there are missing interest rate data for specific Ccy and Name on a given asOfDate.", severity: "High" },
+      { id: "IR020", description: "Flag significant day-over-day changes in FwdRate exceeding a defined threshold (e.g., 10% change).", severity: "Medium" },
+      { id: "IR021", description: "Check for data outliers in FwdRate compared to the typical range for a given Ccy, Name, and Tenor.", severity: "Medium" },
+      { id: "IR022", description: "Check if the interest rate data is updated within an acceptable timeframe.", severity: "High" }
+    ],
+    csaTerms: [
+      { id: "CSA033", description: "Alert if there are missing CSA Terms for a specific Counterparty.", severity: "High" },
+      { id: "CSA034", description: "Check for changes in CSA Terms over time for the same CSA ID.", severity: "Medium" },
+      { id: "CSA035", description: "Ensure that the MarginFrequency is adhered to. For example, if it is daily, then margin calls are made daily.", severity: "High" }
+    ],
+    trades: [
+      { id: "TRD032", description: "Alert if there are missing trades for specific Counterparty on a given date.", severity: "High" },
+      { id: "TRD033", description: "Flag significant day-over-day changes in CVA or DVA exceeding a defined threshold (e.g., 20% change).", severity: "Medium" },
+      { id: "TRD034", description: "Check for data outliers in CVA, DVA, and portfolioValue compared to the typical range for a given Counterparty.", severity: "Medium" },
+      { id: "TRD035", description: "Check if the trade data is updated within an acceptable timeframe.", severity: "High" },
+      { id: "TRD036", description: "If Rating1 or Rating2 changes drastically overnight (e.g., from investment grade to junk), flag as anomaly.", severity: "High" },
+      { id: "TRD037", description: "If AgreementID is populated, ensure that the corresponding CSA terms exist in the CSA Terms sheet.", severity: "High" },
+      { id: "TRD038", description: "If ContractualNetting is true, ensure that there are other trades with the same NettingGroupId.", severity: "Medium" },
+      { id: "TRD039", description: "Check for consistency of counterparty ratings with external sources.", severity: "Medium" },
+      { id: "TRD040", description: "Check for large changes in portfolioValue that are not reflected in CVA and DVA.", severity: "Medium" },
+      { id: "TRD041", description: "Check for trades with same AgreementID but different terms.", severity: "High" }
+    ]
+  };
 
-  const getColorForLearningType = (type: string) => {
-    switch (type) {
-      case "supervised":
-        return "bg-blue-500";
-      case "unsupervised":
-        return "bg-purple-500";
-      case "reinforcement":
-        return "bg-emerald-500";
+  const getSeverityBadge = (severity: string) => {
+    switch (severity.toLowerCase()) {
+      case 'critical':
+        return <Badge className="bg-red-500">Critical</Badge>;
+      case 'high':
+        return <Badge className="bg-amber-500">High</Badge>;
+      case 'medium':
+        return <Badge className="bg-orange-400">Medium</Badge>;
+      case 'low':
+        return <Badge className="bg-green-500">Low</Badge>;
       default:
-        return "bg-gray-500";
+        return <Badge className="bg-blue-500">{severity}</Badge>;
     }
   };
 
-  const renderOverviewTab = () => (
-    <div className="space-y-4">
-      {selectedEvent ? (
-        <>
-          <div className="bg-muted/40 p-3 rounded-md">
-            <h3 className="text-sm font-medium mb-1">{selectedEvent.title}</h3>
-            <p className="text-xs text-muted-foreground">{selectedEvent.description}</p>
-            <div className="flex items-center justify-between mt-2">
-              <Badge 
-                variant="outline" 
-                className={`${getColorForLearningType(selectedEvent.learningType)} text-white`}
-              >
-                {selectedEvent.learningType}
-              </Badge>
-              <span className="text-xs text-muted-foreground">
-                {formatDistanceToNow(new Date(selectedEvent.timestamp), { addSuffix: true })}
-              </span>
+  const renderQualityRules = (category: string, rules: any[]) => (
+    <div className="mb-6">
+      <h3 className="text-sm font-medium mb-2">{category}:</h3>
+      <div className="space-y-2">
+        {rules.map(rule => (
+          <div key={rule.id} className="bg-muted/40 p-3 rounded-md">
+            <div className="flex items-center justify-between">
+              <span className="font-medium text-xs">{rule.id}</span>
+              {getSeverityBadge(rule.severity)}
             </div>
+            <p className="text-xs mt-1">{rule.description}</p>
           </div>
-          
-          <div className="grid grid-cols-2 gap-3">
-            <div className="bg-muted/30 p-3 rounded-md">
-              <h4 className="text-xs font-medium mb-2">Data Source</h4>
-              <p className="text-sm">{selectedEvent.dataSource}</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                {selectedEvent.dataPoints.toLocaleString()} data points processed
-              </p>
-            </div>
-            
-            <div className="bg-muted/30 p-3 rounded-md">
-              <h4 className="text-xs font-medium mb-2">Model Performance</h4>
-              <div className="grid grid-cols-2 gap-1 text-xs">
-                <div>Accuracy: <span className="font-mono">{selectedEvent.metrics.accuracy}</span></div>
-                <div>Precision: <span className="font-mono">{selectedEvent.metrics.precision}</span></div>
-                <div>Recall: <span className="font-mono">{selectedEvent.metrics.recall}</span></div>
-                <div>F1 Score: <span className="font-mono">{selectedEvent.metrics.f1Score}</span></div>
-              </div>
-            </div>
-          </div>
-          
-          <div>
-            <h4 className="text-xs font-medium mb-2">Learning Process</h4>
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-dashed border-muted-foreground/30"></div>
-              </div>
-              <div className="relative flex justify-between">
-                <div className="flex flex-col items-center">
-                  <div className="bg-background border rounded-full w-6 h-6 flex items-center justify-center text-xs">1</div>
-                  <span className="text-xs mt-1">Data Collection</span>
-                </div>
-                <div className="flex flex-col items-center">
-                  <div className="bg-background border rounded-full w-6 h-6 flex items-center justify-center text-xs">2</div>
-                  <span className="text-xs mt-1">Preprocessing</span>
-                </div>
-                <div className="flex flex-col items-center">
-                  <div className="bg-background border rounded-full w-6 h-6 flex items-center justify-center text-xs">3</div>
-                  <span className="text-xs mt-1">Model Training</span>
-                </div>
-                <div className="flex flex-col items-center">
-                  <div className="bg-background border border-primary rounded-full w-6 h-6 flex items-center justify-center text-xs text-primary">4</div>
-                  <span className="text-xs mt-1">Validation</span>
-                </div>
-                <div className="flex flex-col items-center">
-                  <div className="bg-background border rounded-full w-6 h-6 flex items-center justify-center text-xs">5</div>
-                  <span className="text-xs mt-1">Deployment</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </>
-      ) : (
-        <div className="flex items-center justify-center h-40 text-muted-foreground">
-          <p>Select a learning event to view details</p>
-        </div>
-      )}
-    </div>
-  );
-
-  const renderDataSourcesTab = () => (
-    <div className="space-y-4">
-      <div className="bg-muted/40 p-3 rounded-md">
-        <h3 className="text-sm font-medium">Data Sources Overview</h3>
-        <p className="text-xs text-muted-foreground mt-1">The learning agent integrates data from multiple sources to build comprehensive models.</p>
-      </div>
-      
-      <ScrollArea className="h-[200px]">
-        <table className="w-full text-sm">
-          <thead className="text-xs text-muted-foreground">
-            <tr>
-              <th className="text-left p-2">Source Name</th>
-              <th className="text-right p-2">Data Points</th>
-              <th className="text-right p-2">Last Updated</th>
-            </tr>
-          </thead>
-          <tbody>
-            {dataSources.map((source) => (
-              <tr key={source.name} className="hover:bg-muted/30">
-                <td className="p-2">{source.name}</td>
-                <td className="text-right p-2">{source.count.toLocaleString()}</td>
-                <td className="text-right p-2 whitespace-nowrap">
-                  {formatDistanceToNow(source.lastUpdated, { addSuffix: true })}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </ScrollArea>
-      
-      <div>
-        <h4 className="text-xs font-medium mb-2">Data Integration Architecture</h4>
-        <div className="p-2 bg-muted/30 rounded-md text-xs">
-          <div className="flex flex-col">
-            <div className="flex justify-between border-b border-border pb-2">
-              <div className="flex items-center gap-2">
-                <Database size={14} className="text-blue-500" />
-                <span>External APIs</span>
-              </div>
-              <span className="text-muted-foreground">3 sources</span>
-            </div>
-            <div className="flex justify-between border-b border-border py-2">
-              <div className="flex items-center gap-2">
-                <Database size={14} className="text-purple-500" />
-                <span>Internal Databases</span>
-              </div>
-              <span className="text-muted-foreground">5 sources</span>
-            </div>
-            <div className="flex justify-between border-b border-border py-2">
-              <div className="flex items-center gap-2">
-                <Database size={14} className="text-emerald-500" />
-                <span>Real-time Feeds</span>
-              </div>
-              <span className="text-muted-foreground">2 sources</span>
-            </div>
-            <div className="flex justify-between pt-2">
-              <div className="flex items-center gap-2">
-                <Database size={14} className="text-amber-500" />
-                <span>Batch Processes</span>
-              </div>
-              <span className="text-muted-foreground">4 sources</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderMetricsTab = () => (
-    <div className="space-y-4">
-      <div className="bg-muted/40 p-3 rounded-md">
-        <h3 className="text-sm font-medium">Performance Metrics</h3>
-        <p className="text-xs text-muted-foreground mt-1">Tracking the learning agent's performance over time.</p>
-      </div>
-      
-      <div>
-        <h4 className="text-xs font-medium mb-2">Metrics Over Time</h4>
-        <div className="h-[180px] w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={metricsHistory}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} />
-              <XAxis dataKey="date" tick={{ fontSize: 10 }} />
-              <YAxis domain={[0.7, 1]} tick={{ fontSize: 10 }} />
-              <Tooltip contentStyle={{ fontSize: '12px' }} />
-              <Legend wrapperStyle={{ fontSize: '10px' }} />
-              <Line type="monotone" dataKey="accuracy" stroke="#3b82f6" dot={{ r: 2 }} />
-              <Line type="monotone" dataKey="precision" stroke="#10b981" dot={{ r: 2 }} />
-              <Line type="monotone" dataKey="recall" stroke="#f59e0b" dot={{ r: 2 }} />
-              <Line type="monotone" dataKey="f1Score" stroke="#8b5cf6" dot={{ r: 2 }} />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-      
-      <div className="grid grid-cols-2 gap-3">
-        <div className="bg-muted/30 p-3 rounded-md">
-          <h4 className="text-xs font-medium mb-1">Current Model Status</h4>
-          <div className="flex items-center gap-2 mt-2">
-            <CheckCircle size={16} className="text-green-500" />
-            <span className="text-sm">Operational</span>
-          </div>
-          <p className="text-xs text-muted-foreground mt-1">Last evaluated 2 hours ago</p>
-        </div>
-        <div className="bg-muted/30 p-3 rounded-md">
-          <h4 className="text-xs font-medium mb-1">Next Training Run</h4>
-          <div className="text-sm mt-2">Scheduled in 4 hours</div>
-          <p className="text-xs text-muted-foreground mt-1">Expected data points: ~15,000</p>
-        </div>
+        ))}
       </div>
     </div>
   );
@@ -354,62 +119,102 @@ export function LearningAgentWidget({ widget, onClose }: WidgetComponentProps) {
           {widget.title}
         </CardTitle>
         <CardDescription>
-          Insights into the AI learning process and data sources
+          Insights into AI learning and data validation rules
         </CardDescription>
       </CardHeader>
       <CardContent className="p-0">
-        <div className="flex flex-col md:flex-row h-[calc(100%-1rem)]">
-          {/* Left column - List of learning events */}
-          <div className="w-full md:w-1/3 border-r">
-            <ScrollArea className="h-[300px]">
-              <div className="p-3 space-y-1">
-                {learningEvents.map(event => (
-                  <Button
-                    key={event.id}
-                    variant={selectedEvent?.id === event.id ? "secondary" : "ghost"}
-                    className="w-full justify-start text-left h-auto py-2"
-                    onClick={() => setSelectedEvent(event)}
-                  >
-                    <div className="flex items-start gap-2">
-                      <div className={`mt-0.5 w-2 h-2 rounded-full ${getColorForLearningType(event.learningType)}`} />
-                      <div className="flex-1 overflow-hidden">
-                        <h4 className="text-xs font-medium truncate">{event.title}</h4>
-                        <p className="text-xs text-muted-foreground truncate">
-                          {formatDistanceToNow(new Date(event.timestamp), { addSuffix: true })}
-                        </p>
-                      </div>
-                    </div>
-                  </Button>
-                ))}
-              </div>
-            </ScrollArea>
-          </div>
+        <Tabs 
+          value={activeTab} 
+          onValueChange={setActiveTab} 
+          className="w-full px-4 pt-4"
+        >
+          <TabsList className="w-full grid grid-cols-3">
+            <TabsTrigger value="validation-rules">Validation Rules</TabsTrigger>
+            <TabsTrigger value="quality-rules">Quality Rules</TabsTrigger>
+            <TabsTrigger value="contextual-rules">Contextual Rules</TabsTrigger>
+          </TabsList>
           
-          {/* Right column - Learning details with tabs */}
-          <div className="w-full md:w-2/3 p-4">
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="w-full">
-                <TabsTrigger value="overview" className="flex-1 text-xs">Overview</TabsTrigger>
-                <TabsTrigger value="datasources" className="flex-1 text-xs">Data Sources</TabsTrigger>
-                <TabsTrigger value="metrics" className="flex-1 text-xs">Metrics</TabsTrigger>
-              </TabsList>
-              
-              <div className="mt-4">
-                <TabsContent value="overview" className="m-0">
-                  {renderOverviewTab()}
-                </TabsContent>
-                
-                <TabsContent value="datasources" className="m-0">
-                  {renderDataSourcesTab()}
-                </TabsContent>
-                
-                <TabsContent value="metrics" className="m-0">
-                  {renderMetricsTab()}
-                </TabsContent>
+          <div className="mt-4">
+            <TabsContent value="validation-rules" className="m-0">
+              <div className="bg-muted/40 p-3 rounded-md mb-4">
+                <h3 className="text-sm font-medium">Validation Rules</h3>
+                <p className="text-xs text-muted-foreground mt-1">
+                  These rules are applied to validate data quality and integrity
+                </p>
               </div>
-            </Tabs>
+              
+              <ScrollArea className="h-[calc(100vh-300px)] max-h-[400px]">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[80px]">Rule ID</TableHead>
+                      <TableHead className="w-[100px]">Type</TableHead>
+                      <TableHead className="w-[100px]">Data Element</TableHead>
+                      <TableHead>Rule Description</TableHead>
+                      <TableHead className="w-[100px]">Threshold</TableHead>
+                      <TableHead className="w-[120px]">Scope</TableHead>
+                      <TableHead className="w-[80px]">Severity</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {validationRules.map(rule => (
+                      <TableRow key={rule.id}>
+                        <TableCell className="font-medium">{rule.id}</TableCell>
+                        <TableCell>{rule.type}</TableCell>
+                        <TableCell>{rule.dataElement}</TableCell>
+                        <TableCell>{rule.description}</TableCell>
+                        <TableCell>{rule.threshold}</TableCell>
+                        <TableCell>{rule.scope}</TableCell>
+                        <TableCell>{getSeverityBadge(rule.severity)}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </ScrollArea>
+
+              <div className="flex justify-between items-center mt-4 text-xs text-muted-foreground">
+                <div className="flex items-center gap-2">
+                  <CheckCircle size={14} className="text-green-500" />
+                  <span>Rules last updated: 2 hours ago</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <AlertTriangle size={14} className="text-amber-500" />
+                  <span>10 new rules added this week</span>
+                </div>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="quality-rules" className="m-0">
+              <div className="bg-muted/40 p-3 rounded-md mb-4">
+                <h3 className="text-sm font-medium">Quality Rules</h3>
+                <p className="text-xs text-muted-foreground mt-1">
+                  These rules define expectations for data quality across domains
+                </p>
+              </div>
+              
+              <ScrollArea className="h-[calc(100vh-300px)] max-h-[400px] pr-3">
+                {renderQualityRules("Interest Rates", qualityRules.interestRates)}
+                {renderQualityRules("CSA Terms", qualityRules.csaTerms)}
+                {renderQualityRules("Trades", qualityRules.trades)}
+              </ScrollArea>
+            </TabsContent>
+            
+            <TabsContent value="contextual-rules" className="m-0">
+              <div className="bg-muted/40 p-3 rounded-md mb-4">
+                <h3 className="text-sm font-medium">Contextual Rules</h3>
+                <p className="text-xs text-muted-foreground mt-1">
+                  These rules consider broader context and relationships between data points
+                </p>
+              </div>
+              
+              <ScrollArea className="h-[calc(100vh-300px)] max-h-[400px] pr-3">
+                {renderQualityRules("Interest Rates", contextualRules.interestRates)}
+                {renderQualityRules("CSA Terms", contextualRules.csaTerms)}
+                {renderQualityRules("Trades", contextualRules.trades)}
+              </ScrollArea>
+            </TabsContent>
           </div>
-        </div>
+        </Tabs>
       </CardContent>
     </Card>
   );

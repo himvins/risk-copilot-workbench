@@ -1,53 +1,53 @@
 
 # Remediation History Widget
 
-## Overview
-The Remediation History Widget tracks and displays actions taken by the Remediation Agent in response to data quality issues. It provides transparency into automated remediation processes and enables users to monitor the effectiveness of corrective actions.
+The Remediation History widget displays the actions taken by the Remediation Agent in response to data quality issues. It provides a historical record and real-time tracking of all automated and human-initiated remediation activities.
 
-## Features
+## Key Features
 
-### Remediation Action Tracking
-- Chronological display of all remediation actions taken by the system
-- Filters for viewing actions by status (completed, pending, failed)
-- Detailed information about each remediation event
+### Action Tracking
+- Lists all remediation actions with status (Completed, Pending, Failed)
+- Shows detailed information about each action
+- Provides timeline visualization of the remediation process
 
-### Status Monitoring
-- Visual indicators of action status (completed, pending, failed)
-- Success metrics for completed remediation actions
-- Failure analysis for unsuccessful remediation attempts
+### Filtering and Organization
+- Filter actions by status (All, Completed, Pending, Failed)
+- Sort by time, severity, or impact
+- Group by type of remediation or data domain
 
 ### Action Details
-- What action was taken (e.g., normalization, imputation, deletion)
-- Which data quality issue triggered the remediation
-- Timestamp of the remediation action
-- Number of records affected
-- Execution time and performance metrics
-- Success rate of the remediation
+For each remediation action, the widget shows:
+- Title and description of the action
+- What triggered the action (Data Quality Alert, User Request, Scheduled)
+- Action taken (with technical details)
+- Result and impact
+- Execution time and affected records
+- Timeline of the remediation process
 
-### Interactive Interface
-- Tabbed navigation between different status categories
-- Selectable remediation actions with detailed view
-- Timeline visualization of remediation activities
+### Integration with Data Quality Insights
+- Shows which Data Quality alerts led to the remediation
+- Connects user decisions to automated actions
+- Provides an audit trail of the entire process
 
-### Audit Trail
-- Maintains a comprehensive history of all system interventions
-- Supports compliance and governance requirements
-- Provides evidence of system actions for regulatory purposes
+### Examples
+- **Data Normalization**: Automatic correction of outlier values
+- **Missing Value Imputation**: ML-based filling of missing data
+- **Schema Correction**: Alignment of schema changes with documentation
+- **Data Deduplication**: Removal of duplicate records
+- **Field Type Correction**: Conversion of incorrectly formatted fields
 
-## Technical Implementation
-- Subscribes to remediation action events through the message bus
-- Uses interactive UI components to filter and display remediation history
-- Implements detailed view for each remediation action
-- Provides status-based color coding for quick assessment
+### Workflow Integration
+When a user selects a remediation action from the Data Quality Insights widget:
+1. The Remediation History widget automatically opens
+2. The selected action is highlighted
+3. Real-time progress is shown for ongoing remediations
+4. Results are displayed as they become available
 
-## Integration with Other Components
-- Receives data from the Remediation Agent through the message bus
-- Links back to related data quality issues in the Data Quality Insights Widget
-- Coordinates with notification system for alerting users about completed actions
+## Use Cases
+- Audit trail for regulatory compliance
+- Performance tracking of automated remediation
+- Identification of recurring data quality issues
+- Evaluation of remediation effectiveness
+- Planning for process improvements
 
-## User Workflow
-1. User receives notification about a remediation action
-2. User clicks on the notification, which adds this widget to the workspace
-3. User can see all remediation actions filtered by status
-4. User can select a specific action to view detailed information
-5. User can assess the effectiveness of the remediation and take further action if needed
+This widget completes the end-to-end workflow from data quality detection through remediation, providing transparency and accountability for all automated actions.

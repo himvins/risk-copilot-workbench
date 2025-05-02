@@ -5,13 +5,14 @@ import { useState, useEffect } from "react";
 import { messageBus } from "@/lib/messageBus";
 import { MessageTopics } from "@/lib/messageTopics";
 import { formatDistanceToNow } from "date-fns";
-import { Shield, CheckCircle, XCircle, Clock, Filter } from "lucide-react";
+import { Shield, CheckCircle, XCircle, Clock, Filter, ArrowRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 
 export function RemediationHistoryWidget({ widget, onClose }: WidgetComponentProps) {
   const [remediationActions, setRemediationActions] = useState<RemediationAction[]>([]);
@@ -30,6 +31,11 @@ export function RemediationHistoryWidget({ widget, onClose }: WidgetComponentPro
           }
           return [action, ...prev];
         });
+        
+        // Auto-select the new action if it's the first or if there's no selection
+        if (prev => prev.length === 0 || !selectedAction) {
+          setSelectedAction(action);
+        }
       }
     );
 
@@ -39,12 +45,12 @@ export function RemediationHistoryWidget({ widget, onClose }: WidgetComponentPro
         const demoActions: RemediationAction[] = [
           {
             id: "ra-1",
-            title: "Data Normalization",
-            description: "Remediation agent normalized outlier values in transaction dataset.",
+            title: "IR Volatility Correction",
+            description: "Fixed negative IR volatilities in all affected vol surfaces.",
             timestamp: new Date(Date.now() - 1000 * 60 * 15),
             status: "completed",
-            actionTaken: "Statistical normalization applied to outlier values that exceeded 3 standard deviations.",
-            result: "97% of identified issues were successfully resolved.",
+            actionTaken: "Applied absolute value transformation to negative volatilities and flagged for data provider review.",
+            result: "All negative values corrected. Pricing models now produce valid results.",
             metadata: {
               correctedRecords: 157,
               executionTime: "45 seconds"
@@ -52,14 +58,14 @@ export function RemediationHistoryWidget({ widget, onClose }: WidgetComponentPro
           },
           {
             id: "ra-2",
-            title: "Missing Value Imputation",
-            description: "Filling missing values in market data feed with ML-predicted values.",
+            title: "Commodity Curve Tenor Cleanup",
+            description: "Removing expired tenors from commodity curves.",
             timestamp: new Date(Date.now() - 1000 * 60 * 60),
             status: "pending",
-            actionTaken: "Advanced ML-based imputation being applied to critical fields.",
+            actionTaken: "Identifying and removing tenor points with expiration dates in the past.",
             result: "In progress - 65% complete",
             metadata: {
-              correctedRecords: 48,
+              correctedRecords: 12,
               executionTime: "2 minutes (ongoing)"
             }
           },
@@ -78,27 +84,27 @@ export function RemediationHistoryWidget({ widget, onClose }: WidgetComponentPro
           },
           {
             id: "ra-4",
-            title: "Data Deduplication",
-            description: "Removed duplicate transaction records created by system error.",
+            title: "Missing EUR_SWAP_6M Curve Fix",
+            description: "Remediated missing EUR_SWAP_6M curve by carrying forward previous values.",
             timestamp: new Date(Date.now() - 1000 * 60 * 240),
             status: "completed",
-            actionTaken: "Identified and removed duplicate entries based on transaction ID and timestamp.",
-            result: "Successfully removed 283 duplicate records.",
+            actionTaken: "Retrieved curve data from previous day and applied appropriate shifts based on related curves.",
+            result: "Successfully created a proxy curve with 99.2% confidence level.",
             metadata: {
-              correctedRecords: 283,
+              correctedRecords: 1,
               executionTime: "37 seconds"
             }
           },
           {
             id: "ra-5",
-            title: "Field Type Correction",
-            description: "Converted incorrectly formatted date fields to proper date type.",
+            title: "CVA Spike Investigation",
+            description: "Analyzed and normalized unusual CVA values across counterparties.",
             timestamp: new Date(Date.now() - 1000 * 60 * 300),
             status: "completed",
-            actionTaken: "Type conversion applied to date fields in string format.",
-            result: "All 1,245 records successfully converted.",
+            actionTaken: "Performed root cause analysis and identified data feed issue with market volatility inputs.",
+            result: "Corrected market data inputs and recalculated CVA values. Spike resolved.",
             metadata: {
-              correctedRecords: 1245,
+              correctedRecords: 23,
               executionTime: "68 seconds"
             }
           }
@@ -160,6 +166,104 @@ export function RemediationHistoryWidget({ widget, onClose }: WidgetComponentPro
     }
     return 50; // Default to 50% if can't determine
   };
+
+  const renderActionDetails = () => {
+    if (!selectedAction) return null;
+
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-medium">{selectedAction.title}</h3>
+          <Badge 
+            variant="outline" 
+            className={getStatusColor(selectedAction.status)}
+          >
+            {selectedAction.status}
+          </Badge>
+        </div>
+        
+        <p className="text-xs text-muted-foreground">{selectedAction.description}</p>
+        
+        <div className="bg-muted/30 p-3 rounded-md">
+          <h4 className="text-xs font-medium mb-1">Action Taken:</h4>
+          <p className="text-xs">{selectedAction.actionTaken}</p>
+        </div>
+        
+        <div className="bg-muted/30 p-3 rounded-md">
+          <h4 className="text-xs font-medium mb-1">Result:</h4>
+          <p className="text-xs">{selectedAction.result}</p>
+          
+          {selectedAction.status === "pending" && (
+            <div className="mt-2">
+              <Progress value={getCompletionPercent(selectedAction.result)} className="h-2" />
+            </div>
+          )}
+        </div>
+        
+        <div className="grid grid-cols-2 gap-3 text-xs">
+          <div>
+            <span className="text-muted-foreground">Records affected:</span>
+            <span className="ml-2 font-medium">{selectedAction.metadata?.correctedRecords}</span>
+          </div>
+          <div>
+            <span className="text-muted-foreground">Execution time:</span>
+            <span className="ml-2 font-medium">{selectedAction.metadata?.executionTime}</span>
+          </div>
+          <div>
+            <span className="text-muted-foreground">Timestamp:</span>
+            <span className="ml-2 font-medium">
+              {new Date(selectedAction.timestamp).toLocaleString()}
+            </span>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderActionTimeline = () => {
+    if (!selectedAction) return null;
+
+    return (
+      <div>
+        <h4 className="text-xs font-medium mb-2">Remediation Timeline</h4>
+        <ol className="relative border-l border-gray-300 dark:border-gray-600 ml-3">
+          <li className="mb-6 ml-6">
+            <span className="absolute flex items-center justify-center w-6 h-6 rounded-full -left-3 bg-primary text-primary-foreground text-xs">1</span>
+            <h3 className="font-medium text-xs">Issue Detected</h3>
+            <p className="text-xs text-muted-foreground">
+              {formatDistanceToNow(new Date(selectedAction.timestamp), { addSuffix: true })}
+            </p>
+          </li>
+          <li className="mb-6 ml-6">
+            <span className="absolute flex items-center justify-center w-6 h-6 rounded-full -left-3 bg-primary text-primary-foreground text-xs">2</span>
+            <h3 className="font-medium text-xs">Analysis Performed</h3>
+            <p className="text-xs text-muted-foreground">Automated root cause analysis</p>
+          </li>
+          <li className="mb-6 ml-6">
+            <span className="absolute flex items-center justify-center w-6 h-6 rounded-full -left-3 bg-primary text-primary-foreground text-xs">3</span>
+            <h3 className="font-medium text-xs">Remediation Plan Created</h3>
+            <p className="text-xs text-muted-foreground">{selectedAction.actionTaken.substring(0, 50)}...</p>
+          </li>
+          <li className="ml-6">
+            <span className={`absolute flex items-center justify-center w-6 h-6 rounded-full -left-3 ${selectedAction.status === "completed" ? "bg-green-500" : selectedAction.status === "pending" ? "bg-amber-500" : "bg-red-500"} text-white text-xs`}>
+              {selectedAction.status === "completed" ? "✓" : selectedAction.status === "pending" ? "..." : "!"}
+            </span>
+            <h3 className="font-medium text-xs">{selectedAction.status === "completed" ? "Remediation Complete" : selectedAction.status === "pending" ? "Remediation In Progress" : "Remediation Failed"}</h3>
+            <p className="text-xs text-muted-foreground">{selectedAction.status === "completed" ? "Action successfully completed" : selectedAction.status === "pending" ? "Action currently being executed" : "Action failed - manual intervention required"}</p>
+          </li>
+        </ol>
+      </div>
+    );
+  };
+
+  // Detailed remediation summary by type
+  const actionSummary = [
+    { type: "Data Normalization", count: 3, success: 3 },
+    { type: "Missing Value Imputation", count: 2, success: 1 },
+    { type: "Schema Correction", count: 1, success: 0 },
+    { type: "Tenor Cleanup", count: 1, success: 0 },
+    { type: "Market Data Correction", count: 2, success: 2 }
+  ];
 
   return (
     <Card className="w-full h-full">
@@ -223,84 +327,115 @@ export function RemediationHistoryWidget({ widget, onClose }: WidgetComponentPro
           </div>
           
           {/* Right column - Remediation action details */}
-          <div className="w-full md:w-2/3 p-4">
-            {selectedAction ? (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-medium">{selectedAction.title}</h3>
-                  <Badge 
-                    variant="outline" 
-                    className={getStatusColor(selectedAction.status)}
-                  >
-                    {selectedAction.status}
-                  </Badge>
-                </div>
-                
-                <p className="text-xs text-muted-foreground">{selectedAction.description}</p>
-                
-                <div className="bg-muted/30 p-3 rounded-md">
-                  <h4 className="text-xs font-medium mb-1">Action Taken:</h4>
-                  <p className="text-xs">{selectedAction.actionTaken}</p>
-                </div>
-                
-                <div className="bg-muted/30 p-3 rounded-md">
-                  <h4 className="text-xs font-medium mb-1">Result:</h4>
-                  <p className="text-xs">{selectedAction.result}</p>
-                  
-                  {selectedAction.status === "pending" && (
-                    <div className="mt-2">
-                      <Progress value={getCompletionPercent(selectedAction.result)} className="h-2" />
+          <div className="w-full md:w-2/3">
+            <Tabs defaultValue="details" className="w-full">
+              <div className="px-4 pt-4">
+                <TabsList className="w-full">
+                  <TabsTrigger value="details" className="flex-1">Details</TabsTrigger>
+                  <TabsTrigger value="timeline" className="flex-1">Timeline</TabsTrigger>
+                  <TabsTrigger value="summary" className="flex-1">Summary</TabsTrigger>
+                </TabsList>
+              </div>
+              
+              <TabsContent value="details" className="p-4 pt-3">
+                {selectedAction ? (
+                  renderActionDetails()
+                ) : (
+                  <div className="flex items-center justify-center h-[200px] text-muted-foreground">
+                    <p>Select a remediation action to view details</p>
+                  </div>
+                )}
+              </TabsContent>
+              
+              <TabsContent value="timeline" className="p-4 pt-3">
+                {selectedAction ? (
+                  renderActionTimeline()
+                ) : (
+                  <div className="flex items-center justify-center h-[200px] text-muted-foreground">
+                    <p>Select a remediation action to view timeline</p>
+                  </div>
+                )}
+              </TabsContent>
+              
+              <TabsContent value="summary" className="p-4 pt-3">
+                <div className="space-y-4">
+                  <div className="bg-muted/30 p-3 rounded-md">
+                    <h3 className="text-sm font-medium mb-2">Remediation Summary</h3>
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div>
+                        <span className="text-muted-foreground">Total Actions:</span>
+                        <span className="ml-2 font-medium">{remediationActions.length}</span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Success Rate:</span>
+                        <span className="ml-2 font-medium">
+                          {Math.round((remediationActions.filter(a => a.status === "completed").length / remediationActions.length) * 100)}%
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Avg. Resolution Time:</span>
+                        <span className="ml-2 font-medium">42 seconds</span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Total Records Fixed:</span>
+                        <span className="ml-2 font-medium">
+                          {remediationActions.reduce((sum, action) => sum + (action.metadata?.correctedRecords || 0), 0)}
+                        </span>
+                      </div>
                     </div>
-                  )}
-                </div>
-                
-                <div className="grid grid-cols-2 gap-3 text-xs">
-                  <div>
-                    <span className="text-muted-foreground">Records affected:</span>
-                    <span className="ml-2 font-medium">{selectedAction.metadata?.correctedRecords}</span>
                   </div>
-                  <div>
-                    <span className="text-muted-foreground">Execution time:</span>
-                    <span className="ml-2 font-medium">{selectedAction.metadata?.executionTime}</span>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">Timestamp:</span>
-                    <span className="ml-2 font-medium">
-                      {new Date(selectedAction.timestamp).toLocaleString()}
-                    </span>
+                  
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Remediation Type</TableHead>
+                        <TableHead>Count</TableHead>
+                        <TableHead>Success</TableHead>
+                        <TableHead>Rate</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {actionSummary.map(item => (
+                        <TableRow key={item.type}>
+                          <TableCell>{item.type}</TableCell>
+                          <TableCell>{item.count}</TableCell>
+                          <TableCell>{item.success}</TableCell>
+                          <TableCell>
+                            {Math.round((item.success / item.count) * 100)}%
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                  
+                  <div className="bg-muted/30 p-3 rounded-md">
+                    <h4 className="text-xs font-medium mb-2">Integration Flow</h4>
+                    <div className="flex items-center justify-between text-xs">
+                      <div className="text-center">
+                        <div className="bg-blue-100 dark:bg-blue-900 p-2 rounded-md mb-1">
+                          Data Quality Agent
+                        </div>
+                        <div className="text-muted-foreground">Detection</div>
+                      </div>
+                      <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                      <div className="text-center">
+                        <div className="bg-amber-100 dark:bg-amber-900 p-2 rounded-md mb-1">
+                          Human Review
+                        </div>
+                        <div className="text-muted-foreground">Decision</div>
+                      </div>
+                      <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                      <div className="text-center">
+                        <div className="bg-green-100 dark:bg-green-900 p-2 rounded-md mb-1">
+                          Remediation Agent
+                        </div>
+                        <div className="text-muted-foreground">Action</div>
+                      </div>
+                    </div>
                   </div>
                 </div>
-                
-                <Separator />
-                
-                <div>
-                  <h4 className="text-xs font-medium mb-2">Timeline</h4>
-                  <ol className="relative border-l border-gray-300 dark:border-gray-600 ml-3">
-                    <li className="mb-6 ml-6">
-                      <span className="absolute flex items-center justify-center w-6 h-6 rounded-full -left-3 bg-primary text-primary-foreground text-xs">1</span>
-                      <h3 className="font-medium text-xs">Issue Detected</h3>
-                      <p className="text-xs text-muted-foreground">Data quality agent flagged the issue</p>
-                    </li>
-                    <li className="mb-6 ml-6">
-                      <span className="absolute flex items-center justify-center w-6 h-6 rounded-full -left-3 bg-primary text-primary-foreground text-xs">2</span>
-                      <h3 className="font-medium text-xs">Analysis Performed</h3>
-                      <p className="text-xs text-muted-foreground">Root cause analysis identified solution</p>
-                    </li>
-                    <li className="ml-6">
-                      <span className={`absolute flex items-center justify-center w-6 h-6 rounded-full -left-3 ${selectedAction.status === "completed" ? "bg-green-500" : selectedAction.status === "pending" ? "bg-amber-500" : "bg-red-500"} text-white text-xs`}>
-                        {selectedAction.status === "completed" ? "3" : selectedAction.status === "pending" ? "..." : "!"}
-                      </span>
-                      <h3 className="font-medium text-xs">{selectedAction.status === "completed" ? "Remediation Complete" : selectedAction.status === "pending" ? "Remediation In Progress" : "Remediation Failed"}</h3>
-                      <p className="text-xs text-muted-foreground">{selectedAction.status === "completed" ? "Action successfully completed" : selectedAction.status === "pending" ? "Action currently being executed" : "Action failed - manual intervention required"}</p>
-                    </li>
-                  </ol>
-                </div>
-              </div>
-            ) : (
-              <div className="flex items-center justify-center h-full text-muted-foreground">
-                <p>Select a remediation action to view details</p>
-              </div>
-            )}
+              </TabsContent>
+            </Tabs>
           </div>
         </div>
       </CardContent>
