@@ -480,8 +480,8 @@ export function DataQualityInsightsWidget({ widget, onClose }: WidgetComponentPr
                   </AlertDescription>
                 </Alert>
                 
-                <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "details" | "actions")}>
-                  <TabsList className="w-full">
+                <Tabs defaultValue={activeTab} onValueChange={(value) => setActiveTab(value as "details" | "actions")}>
+                  <TabsList className="grid w-full grid-cols-2">
                     <TabsTrigger value="details">Issue Details</TabsTrigger>
                     <TabsTrigger value="actions">Next Best Actions</TabsTrigger>
                   </TabsList>

@@ -18,6 +18,7 @@ export function RemediationHistoryWidget({ widget, onClose }: WidgetComponentPro
   const [remediationActions, setRemediationActions] = useState<RemediationAction[]>([]);
   const [selectedAction, setSelectedAction] = useState<RemediationAction | null>(null);
   const [filter, setFilter] = useState<"all" | "completed" | "pending" | "failed">("all");
+  const [activeDetailsTab, setActiveDetailsTab] = useState("details");
   
   // Subscribe to remediation actions
   useEffect(() => {
@@ -33,7 +34,7 @@ export function RemediationHistoryWidget({ widget, onClose }: WidgetComponentPro
         });
         
         // Auto-select the new action if it's the first or if there's no selection
-        if (prev => prev.length === 0 || !selectedAction) {
+        if (!prev || prev.length === 0 || !selectedAction) {
           setSelectedAction(action);
         }
       }
@@ -282,8 +283,8 @@ export function RemediationHistoryWidget({ widget, onClose }: WidgetComponentPro
           <div className="w-full md:w-1/3 border-r">
             <div className="p-2 border-b">
               <Tabs 
-                value={filter} 
-                onValueChange={(value) => setFilter(value as any)}
+                defaultValue={filter} 
+                onValueChange={(value) => setFilter(value as "all" | "completed" | "pending" | "failed")}
                 className="w-full"
               >
                 <TabsList className="w-full grid grid-cols-4 h-8">
@@ -328,9 +329,9 @@ export function RemediationHistoryWidget({ widget, onClose }: WidgetComponentPro
           
           {/* Right column - Remediation action details */}
           <div className="w-full md:w-2/3">
-            <Tabs defaultValue="details" className="w-full">
+            <Tabs defaultValue={activeDetailsTab} onValueChange={setActiveDetailsTab} className="w-full">
               <div className="px-4 pt-4">
-                <TabsList className="w-full">
+                <TabsList className="w-full grid grid-cols-3">
                   <TabsTrigger value="details" className="flex-1">Details</TabsTrigger>
                   <TabsTrigger value="timeline" className="flex-1">Timeline</TabsTrigger>
                   <TabsTrigger value="summary" className="flex-1">Summary</TabsTrigger>
@@ -369,7 +370,8 @@ export function RemediationHistoryWidget({ widget, onClose }: WidgetComponentPro
                       <div>
                         <span className="text-muted-foreground">Success Rate:</span>
                         <span className="ml-2 font-medium">
-                          {Math.round((remediationActions.filter(a => a.status === "completed").length / remediationActions.length) * 100)}%
+                          {remediationActions.length > 0 ? 
+                            Math.round((remediationActions.filter(a => a.status === "completed").length / remediationActions.length) * 100) : 0}%
                         </span>
                       </div>
                       <div>
