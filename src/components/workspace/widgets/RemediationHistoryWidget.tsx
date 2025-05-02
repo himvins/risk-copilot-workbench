@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { WidgetComponentProps, RemediationAction } from "@/types";
 import { useState, useEffect } from "react";
@@ -25,18 +24,21 @@ export function RemediationHistoryWidget({ widget, onClose }: WidgetComponentPro
     const subscription = messageBus.subscribe(
       MessageTopics.AGENT.REMEDIATION_ACTION,
       (action: RemediationAction) => {
-        setRemediationActions(prev => {
+        setRemediationActions(prevActions => {
           // Don't add duplicates
-          if (prev.some(a => a.id === action.id)) {
-            return prev;
+          if (prevActions.some(a => a.id === action.id)) {
+            return prevActions;
           }
-          return [action, ...prev];
+          return [action, ...prevActions];
         });
         
         // Auto-select the new action if it's the first or if there's no selection
-        if (!prev || prev.length === 0 || !selectedAction) {
-          setSelectedAction(action);
-        }
+        setRemediationActions(prevActions => {
+          if (prevActions.length === 0 || !selectedAction) {
+            setSelectedAction(action);
+          }
+          return prevActions;
+        });
       }
     );
 
@@ -329,7 +331,11 @@ export function RemediationHistoryWidget({ widget, onClose }: WidgetComponentPro
           
           {/* Right column - Remediation action details */}
           <div className="w-full md:w-2/3">
-            <Tabs defaultValue={activeDetailsTab} onValueChange={setActiveDetailsTab} className="w-full">
+            <Tabs 
+              defaultValue={activeDetailsTab} 
+              onValueChange={(value) => setActiveDetailsTab(value)}
+              className="w-full"
+            >
               <div className="px-4 pt-4">
                 <TabsList className="w-full grid grid-cols-3">
                   <TabsTrigger value="details" className="flex-1">Details</TabsTrigger>

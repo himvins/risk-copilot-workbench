@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { WidgetComponentProps, AgentInsight } from "@/types";
@@ -195,12 +194,12 @@ export function DataQualityInsightsWidget({ widget, onClose }: WidgetComponentPr
     // Escalate the alert severity
     const updatedInsights = insights.map(insight => 
       insight.id === selectedInsight.id 
-        ? {...insight, severity: "critical"} 
+        ? {...insight, severity: "critical" as const} 
         : insight
     );
     
     setInsights(updatedInsights);
-    setSelectedInsight({...selectedInsight, severity: "critical"});
+    setSelectedInsight({...selectedInsight, severity: "critical" as const});
   };
 
   const handleRunAgentAgain = () => {
@@ -480,7 +479,10 @@ export function DataQualityInsightsWidget({ widget, onClose }: WidgetComponentPr
                   </AlertDescription>
                 </Alert>
                 
-                <Tabs defaultValue={activeTab} onValueChange={(value) => setActiveTab(value as "details" | "actions")}>
+                <Tabs 
+                  defaultValue={activeTab} 
+                  onValueChange={(value) => setActiveTab(value as "details" | "actions")}
+                >
                   <TabsList className="grid w-full grid-cols-2">
                     <TabsTrigger value="details">Issue Details</TabsTrigger>
                     <TabsTrigger value="actions">Next Best Actions</TabsTrigger>
