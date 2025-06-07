@@ -17,6 +17,8 @@ import { OperationalRiskEventsWidget } from "./widgets/OperationalRiskEventsWidg
 import { DataQualityInsightsWidget } from "./widgets/DataQualityInsightsWidget";
 import { RemediationHistoryWidget } from "./widgets/RemediationHistoryWidget";
 import { LearningAgentWidget } from "./widgets/LearningAgentWidget";
+import { TradeDataMappingWidget } from "./widgets/TradeDataMappingWidget";
+import { TradeReconciliationWidget } from "./widgets/TradeReconciliationWidget";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ResizableWidget } from "./ResizableWidget";
 import { useToast } from "@/hooks/use-toast";
@@ -37,6 +39,8 @@ const widgetComponents: Record<string, React.FC<any>> = {
   "data-quality-insights": DataQualityInsightsWidget,
   "remediation-history": RemediationHistoryWidget,
   "learning-agent": LearningAgentWidget,
+  "trade-data-mapping": TradeDataMappingWidget,
+  "trade-reconciliation": TradeReconciliationWidget,
 };
 
 interface EditableTabProps {

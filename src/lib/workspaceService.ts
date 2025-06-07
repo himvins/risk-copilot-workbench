@@ -50,6 +50,10 @@ const getWidgetTitle = (widgetType: WidgetType): string => {
       return "Stress Testing";
     case "operational-risk-events":
       return "Operational Risk";
+    case "trade-data-mapping":
+      return "Trade Data Mapping";
+    case "trade-reconciliation":
+      return "Trade Reconciliation";
     default:
       return "Widget";
   }

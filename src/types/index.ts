@@ -1,4 +1,3 @@
-
 import { ReactNode } from "react";
 
 export interface Widget {
@@ -30,7 +29,9 @@ export type WidgetType =
   | "operational-risk-events"
   | "data-quality-insights"
   | "remediation-history"
-  | "learning-agent";
+  | "learning-agent"
+  | "trade-data-mapping"
+  | "trade-reconciliation";
 
 export interface Message {
   id: string;
