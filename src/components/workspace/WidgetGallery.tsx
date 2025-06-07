@@ -4,7 +4,7 @@ import { useWorkspace } from "@/hooks/useWorkspace";
 import { Droppable, Draggable } from "@hello-pangea/dnd";
 import { 
   BarChart3, Activity, LineChart, AlertCircle, Scale, DollarSign,
-  CreditCard, Gauge, FileStack, TestTube, AlarmClock
+  CreditCard, Gauge, FileStack, TestTube, AlarmClock, ArrowLeftRight, GitMerge
 } from "lucide-react";
 import { WidgetType } from "@/types";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -88,6 +88,18 @@ const availableWidgets: WidgetTemplate[] = [
     title: "Operational Risk",
     icon: <AlarmClock size={18} className="text-widget-red" />,
     description: "Operational risk incidents",
+  },
+  {
+    type: "trade-data-mapping",
+    title: "Trade Data Mapping",
+    icon: <ArrowLeftRight size={18} className="text-widget-green" />,
+    description: "Map trade data fields between sources",
+  },
+  {
+    type: "trade-reconciliation",
+    title: "Trade Reconciliation",
+    icon: <GitMerge size={18} className="text-widget-accent" />,
+    description: "Compare and reconcile trade data",
   }
 ];
 
